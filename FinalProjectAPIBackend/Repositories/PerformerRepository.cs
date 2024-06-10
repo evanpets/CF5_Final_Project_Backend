@@ -9,9 +9,9 @@ namespace FinalProjectAPIBackend.Repositories
         {
         }
 
-        public async Task<Performer?> GetPerformerAsync(int id)
+        public async Task<Performer?> GetPerformerAsync(int performerId)
         {
-            var performer = await _context.Performers.FindAsync(id);
+            var performer = await _context.Performers.FindAsync(performerId);
             return performer;
         }
 

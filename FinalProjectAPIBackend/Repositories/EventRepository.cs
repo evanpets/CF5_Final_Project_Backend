@@ -19,11 +19,13 @@ namespace FinalProjectAPIBackend.Repositories
             return events;
         }
 
-        public async Task<Event?> GetEventAsync(int id)
+        public async Task<Event?> GetEventAsync(int eventId)
         {
-            var Event = await _context.Events.FindAsync(id);
-            if (Event == null) return null;
-            return Event;
+            var eventEntity = await _context.Events
+                .Include(e => e.Venue).ThenInclude(v=>v.VenueAddress).Include(e => e.Performers)
+                .FirstOrDefaultAsync(e => e.EventId == eventId);
+            if (eventEntity == null) return null;
+            return eventEntity;
         }
 
         //public async Task<Event?> GetEventByDateAndVenueAsync(DateTimeOffset date, string venue)
@@ -36,21 +38,31 @@ namespace FinalProjectAPIBackend.Repositories
         public async Task<Event?> GetEventByTitleAsync(string title)
         {
             return await _context.Events
-                .Include(e => e.Venue).Include(e => e.Performers)
+                .Include(e => e.Venue).ThenInclude(v => v!.VenueAddress).Include(e => e.Performers)
                 .Where(e => e.Title!.Contains(title)).FirstOrDefaultAsync();
         }
 
         public async Task<List<Event>> GetAllEventsOnDateAsync(DateOnly date)
         {
             return await _context.Events
-                .Include(e => e.Venue).Include(e => e.Performers)
+                .Include(e => e.Venue).ThenInclude(v => v!.VenueAddress).Include(e => e.Performers)
                 .Where(e => e.Date == date).ToListAsync();
+        }
+
+        public async Task<List<Event>> GetEventsByUserIdAsync(int userId)
+        {
+            return await _context.Events
+                .Include(e => e.Venue)
+                .ThenInclude(v => v!.VenueAddress)
+                .Include(e => e.Performers)
+                .Where(e => e.UserId == userId)
+                .ToListAsync();
         }
 
         public async Task<List<Event>> FindAllUpcomingEvents()
         {
             return await _context.Events
-            .Include(e => e.Venue).Include(e => e.Performers)
+            .Include(e => e.Venue).ThenInclude(v=>v.VenueAddress).Include(e => e.Performers)
             .Where(e => e.Date >= DateOnly.FromDateTime(DateTime.UtcNow.Date)).OrderBy(e => e.Date).ToListAsync();
         }
 

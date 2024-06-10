@@ -10,12 +10,12 @@ namespace FinalProjectAPIBackend.Services
         Task<User?> VerifyAndGetUserAsync(UserLoginDTO credentials);
         Task<User?> UpdateUserAsync(int userId, UserUpdateDTO request);
         Task<User?> GetUserByUsernameAsync(string username);
-        Task<User?> GetUserById(int id);
+        Task<User?> GetUserById(int userId);
         Task<List<User>> GetAllUsersFilteredAsync(int pageNumber, int pageSize,
             UserFiltersDTO userFiltersDTO);
         string CreateUserToken(int userId, string? userName, string? email,
             string? appSecurityKey);
-        Task DeleteUserAsync(int id);
+        Task DeleteUserAsync(int userId);
 
     }
 }

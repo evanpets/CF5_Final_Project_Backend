@@ -42,7 +42,7 @@ namespace FinalProjectAPIBackend.Migrations
                     b.Property<int>("EventId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
-                        .HasColumnName("ID");
+                        .HasColumnName("EVENT_ID");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("EventId"));
 
@@ -70,10 +70,15 @@ namespace FinalProjectAPIBackend.Migrations
                         .HasColumnType("nvarchar(50)")
                         .HasColumnName("TITLE");
 
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
                     b.Property<int?>("VenueId")
                         .HasColumnType("int");
 
                     b.HasKey("EventId");
+
+                    b.HasIndex("UserId");
 
                     b.HasIndex("VenueId");
 
@@ -85,7 +90,7 @@ namespace FinalProjectAPIBackend.Migrations
                     b.Property<int>("PerformerId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
-                        .HasColumnName("ID");
+                        .HasColumnName("PERFORMER_ID");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PerformerId"));
 
@@ -106,7 +111,7 @@ namespace FinalProjectAPIBackend.Migrations
                     b.Property<int>("UserId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
-                        .HasColumnName("ID");
+                        .HasColumnName("USER_ID");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("UserId"));
 
@@ -164,7 +169,7 @@ namespace FinalProjectAPIBackend.Migrations
                     b.Property<int>("VenueId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
-                        .HasColumnName("ID");
+                        .HasColumnName("VENUE_ID");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("VenueId"));
 
@@ -173,7 +178,13 @@ namespace FinalProjectAPIBackend.Migrations
                         .HasColumnType("nvarchar(50)")
                         .HasColumnName("NAME");
 
+                    b.Property<int>("VenueAddressId")
+                        .HasColumnType("int");
+
                     b.HasKey("VenueId");
+
+                    b.HasIndex("VenueAddressId")
+                        .IsUnique();
 
                     b.ToTable("VENUES", (string)null);
                 });
@@ -181,8 +192,15 @@ namespace FinalProjectAPIBackend.Migrations
             modelBuilder.Entity("FinalProjectAPIBackend.Data.VenueAddress", b =>
                 {
                     b.Property<int>("VenueAddressId")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int")
-                        .HasColumnName("ID");
+                        .HasColumnName("V_ADDRESS_ID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("VenueAddressId"));
+
+                    b.Property<string>("City")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("CITY");
 
                     b.Property<string>("Street")
                         .HasMaxLength(50)
@@ -221,32 +239,48 @@ namespace FinalProjectAPIBackend.Migrations
 
             modelBuilder.Entity("FinalProjectAPIBackend.Data.Event", b =>
                 {
+                    b.HasOne("FinalProjectAPIBackend.Data.User", "User")
+                        .WithMany("Events")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("FinalProjectAPIBackend.Data.Venue", "Venue")
                         .WithMany("Events")
                         .HasForeignKey("VenueId")
                         .OnDelete(DeleteBehavior.SetNull)
                         .HasConstraintName("FK_VENUE_EVENTS");
 
-                    b.Navigation("Venue");
-                });
-
-            modelBuilder.Entity("FinalProjectAPIBackend.Data.VenueAddress", b =>
-                {
-                    b.HasOne("FinalProjectAPIBackend.Data.Venue", "Venue")
-                        .WithOne("VenueAddress")
-                        .HasForeignKey("FinalProjectAPIBackend.Data.VenueAddress", "VenueAddressId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("FK_VENUE_ADDRESS");
+                    b.Navigation("User");
 
                     b.Navigation("Venue");
                 });
 
             modelBuilder.Entity("FinalProjectAPIBackend.Data.Venue", b =>
                 {
-                    b.Navigation("Events");
+                    b.HasOne("FinalProjectAPIBackend.Data.VenueAddress", "VenueAddress")
+                        .WithOne("Venue")
+                        .HasForeignKey("FinalProjectAPIBackend.Data.Venue", "VenueAddressId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_VENUE_ADDRESS");
 
                     b.Navigation("VenueAddress");
+                });
+
+            modelBuilder.Entity("FinalProjectAPIBackend.Data.User", b =>
+                {
+                    b.Navigation("Events");
+                });
+
+            modelBuilder.Entity("FinalProjectAPIBackend.Data.Venue", b =>
+                {
+                    b.Navigation("Events");
+                });
+
+            modelBuilder.Entity("FinalProjectAPIBackend.Data.VenueAddress", b =>
+                {
+                    b.Navigation("Venue");
                 });
 #pragma warning restore 612, 618
         }

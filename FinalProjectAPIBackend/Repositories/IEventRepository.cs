@@ -5,13 +5,14 @@ namespace FinalProjectAPIBackend.Repositories
 {
     public interface IEventRepository
     {
-        Task<Event?> GetEventAsync(int id);
+        Task<Event?> GetEventAsync(int eventId);
         Task<List<Event>> GetAllEventsAsync();
         Task<List<Event>> FindAllUpcomingEvents();
         Task<List<Event>> FindAllPastEvents();
         Task<Event?> GetEventByTitleAsync(string title);
         Task<List<Event>> GetAllEventsOnDateAsync(DateOnly date);
         //Task<Event?> GetEventByDateAndVenueAsync(DateTimeOffset date, string venue);
+        Task<List<Event>> GetEventsByUserIdAsync(int userId);
         Task<List<Event>> GetEventsByCategoryAsync(string category);
         Task<List<Event>> GetAllEventsAtVenueAsync(string venue);
         Task<List<Event>> GetAllEventsWithPerformerAsync(string performer);

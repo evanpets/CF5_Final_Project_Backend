@@ -37,6 +37,12 @@ namespace FinalProjectAPIBackend.Repositories
             return ExistingUser;
         }
 
+        public async Task<User?> GetByEmailAsync(string email)
+        {
+            var ExistingUser = await _context.Users.Where(u => u.Email == email).FirstOrDefaultAsync();
+            return ExistingUser;
+        }
+
         public async Task<List<User>> GetAllUsersFilteredAsync(int pageNumber, int pageSize, List<Func<User, bool>> predicates)
         {
             int skip = pageSize * pageNumber;

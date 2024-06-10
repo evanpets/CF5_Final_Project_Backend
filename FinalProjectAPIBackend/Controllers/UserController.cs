@@ -60,10 +60,23 @@ namespace FinalProjectAPIBackend.Controllers
             return CreatedAtAction(nameof(GetUserById), new { id = returnedUserDTO.UserId }, returnedUserDTO);
         }
 
-        [HttpGet("get/{id}")]
+        [HttpGet("get/id/{id}")]
         public async Task<ActionResult<UserReadOnlyDTO>> GetUserById(int id)
         {
             var user = await _applicationService.UserService.GetUserById(id);
+            if (user is null)
+            {
+                throw new UserNotFoundException("User Not Found");
+            }
+
+            var returnedUser = _mapper.Map<UserReadOnlyDTO>(user);
+            return Ok(returnedUser);
+        }
+
+        [HttpGet("get/username")]
+        public async Task<ActionResult<UserReadOnlyDTO>> GetUserByUsername(string username)
+        {
+            var user = await _applicationService.UserService.GetUserByUsernameAsync(username);
             if (user is null)
             {
                 throw new UserNotFoundException("User Not Found");
@@ -98,33 +111,39 @@ namespace FinalProjectAPIBackend.Controllers
             return Ok(token);
         }
 
-        [HttpPatch("update/{id}")]
-        //[Authorize(Roles = "Admin")]
-        public async Task<ActionResult<UserReadOnlyDTO>> UpdateUserPatch(int id, UserUpdateDTO patchDTO)
+        [HttpPatch("update/{userId}")]
+        public async Task<ActionResult<UserReadOnlyDTO>> UpdateUserPatch(int userId, UserUpdateDTO patchDTO)
         {
-            var userId = AppUser!.Id;
-            if (id != userId)
+            var appUserId = AppUser!.Id;
+            if (userId != appUserId)
             {
                 throw new ForbiddenException("Forbidden Access");
             }
 
             var user = await _applicationService.UserService.UpdateUserAsync(userId, patchDTO);
-            var userDTO = _mapper.Map<UserDTO>(user);
-            return Ok(userDTO);
-        }
-        [HttpPut("update-account/{id}")]
-        //[Authorize(Roles = "Admin")]
-        public async Task<ActionResult<UserDTO>> UpdateUserAccount(int id, UserUpdateDTO? userDTO)
-        {
-            var userId = AppUser!.Id;
-            if (id != userId)
+            Console.WriteLine("Updated user in patch" + user);
+            if (user is null)
             {
-                throw new ForbiddenException("Forbidden Access");
+                return BadRequest(new { msg = "User update failed" });
             }
-            var user = await _applicationService.UserService.UpdateUserAsync(userId, userDTO!);
-            var returnedUserDTO = _mapper.Map<UserDTO>(user);
-            return Ok(returnedUserDTO);
+            var userDTO = _mapper.Map<UserReadOnlyDTO>(user);
+            Console.WriteLine("User dto in controller: " + userDTO);
+            return Ok(new { msg = "User updated successfully", user = userDTO });
         }
+
+        //[HttpPut("update-account/{id}")]
+        //public async Task<ActionResult<UserDTO>> UpdateUserAccount(int id, UserUpdateDTO? userDTO)
+        //{
+        //    var userId = AppUser!.Id;
+        //    if (id != userId)
+        //    {
+        //        throw new ForbiddenException("Forbidden Access");
+        //    }
+        //    var user = await _applicationService.UserService.UpdateUserAsync(userId, userDTO!);
+
+        //    var returnedUserDTO = _mapper.Map<UserDTO>(user);
+        //    return Ok(returnedUserDTO);
+        //}
 
         [HttpDelete("delete/{id}")]
         //[Authorize(Roles = "Admin")]
@@ -139,6 +158,47 @@ namespace FinalProjectAPIBackend.Controllers
             await _applicationService.UserService.DeleteUserAsync(userId);
             return NoContent();
         }
+
+        [HttpGet("check-duplicate-email")]
+        public async Task<IActionResult> CheckDuplicateEmail(string email)
+        {
+            try
+            {
+                var existingEmail = await _applicationService.UserService.GetUserByEmailAsync(email);
+                if (existingEmail is not null)
+                {
+                    return Ok(new { msg = "Email already in use" });
+                }
+                return Ok(new { msg = "Email not registered yet" });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Problem in finding email");
+                Console.WriteLine(ex);
+                return BadRequest(new { msg = ex.Message });
+            }
+        }
+
+        [HttpGet("check-duplicate-username")]
+        public async Task<IActionResult> CheckDuplicateUsername(string username)
+        {
+            try
+            {
+                var existingUsername = await _applicationService.UserService.GetUserByUsernameAsync(username);
+                if (existingUsername is not null)
+                {
+                    return Ok(new { msg = "Username already taken" });
+                }
+                return Ok(new { msg = "Username available" });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Problem in finding username");
+                Console.WriteLine(ex);
+                return BadRequest(new { msg = ex.Message });
+            }
+        }
     }
 }
+
 

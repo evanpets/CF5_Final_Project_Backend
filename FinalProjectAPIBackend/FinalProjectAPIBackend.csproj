@@ -25,4 +25,8 @@
     <PackageReference Include="Swashbuckle.AspNetCore.Newtonsoft" Version="6.6.2" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Logs\" />
+  </ItemGroup>
+
 </Project>

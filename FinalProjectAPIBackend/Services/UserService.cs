@@ -104,6 +104,25 @@ namespace FinalProjectAPIBackend.Services
             }
             return user;
         }
+
+        public async Task<User?> GetUserByEmailAsync(string email)
+        {
+            User? user;
+
+            try
+            {
+                user = await _unitOfWork!.UserRepository.GetByEmailAsync(email);
+                _logger!.LogInformation("{Message}", "A user with the email: " + email + " was found successfully.");
+
+            }
+            catch (UserNotFoundException)
+            {
+                _logger!.LogError("{Message}", "A user with the given email was not found.");
+                throw;
+            }
+            return user;
+        }
+
         public async Task<List<User>> GetAllUsersFiltered(int pageNumber, int pageSize, UserFiltersDTO userFiltersDTO)
         {
             List<User> users = new();
@@ -134,7 +153,6 @@ namespace FinalProjectAPIBackend.Services
         public async Task<User?> UpdateUserAsync(int userId, UserUpdateDTO updateDTO)
         {
             User? existingUser;
-            User? user = null;
 
             try
             {
@@ -150,14 +168,14 @@ namespace FinalProjectAPIBackend.Services
                 existingUser.Role = UserRole.User;
 
                 await _unitOfWork.SaveAsync();
-                _logger!.LogInformation("{Message}", "User: " + user + " updated successfully");
+                _logger!.LogInformation("{Message}", "User: " + existingUser + " updated successfully");
             }
             catch (UserNotFoundException)
             {
                 _logger!.LogError("{Message}", "The user was not found.");
                 throw;
             }
-            return user;
+            return existingUser;
         }
 
         public string CreateUserToken(int userId, string? username, string? email, string? appSecurityKey)

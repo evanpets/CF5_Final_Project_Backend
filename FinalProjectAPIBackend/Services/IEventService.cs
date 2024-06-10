@@ -18,5 +18,6 @@ namespace FinalProjectAPIBackend.Services
         Task<List<DateOnly>> GetAllDatesWithEvents();
         Task<Event?> UpdateEvent(int eventId, EventUpdateDTO updateDTO);
         Task<Event?> DeleteEvent(int eventId);
+        Task<IEnumerable<EventReadOnlyDTO>> GetEventsByUserIdAsync(int userId);
     }
 }

@@ -1,4 +1,5 @@
-﻿using FinalProjectAPIBackend.Models;
+﻿using FinalProjectAPIBackend.DTO.Performer;
+using FinalProjectAPIBackend.Models;
 using System.ComponentModel.DataAnnotations;
 
 namespace FinalProjectAPIBackend.DTO.Event
@@ -15,17 +16,18 @@ namespace FinalProjectAPIBackend.DTO.Event
 
         [StringLength(250, ErrorMessage = "Description should not exceed 250 characters.")]
         public string? Description { get; set; }
-
-        public int VenueId { get; set; }
-
-        public decimal? Price { get; set; }
-
-        public ICollection<int>? PerformerIds { get; set; }
-
         [Required(ErrorMessage = "A valid date must be selected.")]
         public DateOnly? Date { get; set; }
-
+        public string? VenueName { get; set; }
+        public string? VenueStreet { get; set; }
+        public string? VenueStreetNumber { get; set; }
+        public string? VenueZipCode { get; set; }
+        public string? VenueCity { get; set; }
+        public decimal? Price { get; set; }
+        public ICollection<PerformerUpdateDTO>? Performers { get; set; }
+        //public ICollection<int>? PerformerIds { get; set; }
         [Required(ErrorMessage = "An event category must be selected.")]
         public EventCategory? Category { get; set; }
+        public int? UserId { get; set; }
     }
 }

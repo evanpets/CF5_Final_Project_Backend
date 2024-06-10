@@ -25,7 +25,7 @@ namespace FinalProjectAPIBackend.Data
                 entity.ToTable("USERS");
                 entity.HasIndex(e => e.Username, "UQ_USERNAME").IsUnique();
                 entity.HasIndex(e => e.Email, "UQ_EMAIL").IsUnique();
-                entity.Property(e => e.UserId).HasColumnName("ID");
+                entity.Property(e => e.UserId).HasColumnName("USER_ID");
                 entity.Property(e => e.Username)
                     .HasMaxLength(50).HasColumnName("USERNAME");
                 entity.Property(e => e.Password)
@@ -42,19 +42,20 @@ namespace FinalProjectAPIBackend.Data
                     .HasConversion<string>()
                     .HasMaxLength(50)
                     .IsRequired();
+
+                entity.HasMany(u => u.Events)
+                .WithOne(e => e.User)
+                .HasForeignKey(e => e.UserId);
             });
 
             modelBuilder.Entity<Event>(entity =>
             {
                 entity.ToTable("EVENTS");
-                entity.Property(e => e.EventId).HasColumnName("ID");
+                entity.Property(e => e.EventId).HasColumnName("EVENT_ID");
                 entity.Property(e => e.Title)
                     .HasMaxLength(50).HasColumnName("TITLE");
                 entity.Property(e => e.Description)
                     .HasMaxLength(250).HasColumnName("DESCRIPTION");
-                //entity.HasOne(e => e.Venue).WithOne(v => v.Event)
-                //.HasForeignKey<Venue>(e => e.Id).HasConstraintName("FK_VENUES_EVENTS")
-                //.OnDelete(DeleteBehavior.SetNull);
                 entity.Property(e => e.Price).HasColumnType("decimal(18,2)")
                     .HasColumnName("PRICE");
                 entity.Property(e => e.Date).HasColumnName("EVENT_DATE")
@@ -74,16 +75,21 @@ namespace FinalProjectAPIBackend.Data
                 entity.HasMany(e => e.Performers).WithMany(p => p.Events)
                     .UsingEntity("EVENTS_PERFORMERS");
 
+                entity.HasOne(e => e.User)
+                    .WithMany(u => u.Events)
+                    .HasForeignKey(e => e.UserId);
+
             });
 
             modelBuilder.Entity<Venue>(entity =>
             {
                 entity.ToTable("VENUES");
-                entity.Property(e => e.VenueId).HasColumnName("ID");
+                entity.Property(e => e.VenueId).HasColumnName("VENUE_ID");
                 entity.Property(e => e.Name)
                     .HasMaxLength(50).HasColumnName("NAME");
+
                 entity.HasOne(v => v.VenueAddress).WithOne(va => va.Venue)
-                .HasForeignKey<VenueAddress>(v => v.VenueAddressId).HasConstraintName("FK_VENUE_ADDRESS")
+                .HasForeignKey<Venue>(v => v.VenueAddressId).HasConstraintName("FK_VENUE_ADDRESS")
                 .OnDelete(DeleteBehavior.Cascade);
 
             });
@@ -92,7 +98,7 @@ namespace FinalProjectAPIBackend.Data
             {
                 entity.ToTable("PERFORMERS");
                 entity.HasIndex(e => e.Name, "IX_PERFORMER");
-                entity.Property(e => e.PerformerId).HasColumnName("ID");
+                entity.Property(e => e.PerformerId).HasColumnName("PERFORMER_ID");
                 entity.Property(e => e.Name)
                     .HasMaxLength(50).HasColumnName("NAME");
                 //entity.HasMany(p => p.Events).WithMany(e => e.Performers)
@@ -103,13 +109,15 @@ namespace FinalProjectAPIBackend.Data
             modelBuilder.Entity<VenueAddress>(entity =>
             {
                 entity.ToTable("VENUE_ADDRESSES");
-                entity.Property(e => e.VenueAddressId).HasColumnName("ID");
+                entity.Property(e => e.VenueAddressId).HasColumnName("V_ADDRESS_ID");
                 entity.Property(e => e.Street)
                     .HasMaxLength(50).HasColumnName("STREET");
                 entity.Property(e => e.StreetNumber)
                     .HasMaxLength(10).HasColumnName("STREET_NUMBER");
                 entity.Property(e => e.ZipCode)
                     .HasMaxLength(5).HasColumnName("ZIP_CODE");
+                entity.Property(e => e.City)
+                    .HasColumnName("CITY");
             });
         }
     }

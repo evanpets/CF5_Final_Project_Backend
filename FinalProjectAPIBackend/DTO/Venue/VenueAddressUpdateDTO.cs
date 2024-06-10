@@ -19,5 +19,8 @@ namespace FinalProjectAPIBackend.DTO.Venue
         [StringLength(5, MinimumLength = 5, ErrorMessage = "Please check that the ZIP code consists of exactly five characters.")]
         [Required(ErrorMessage = "ZIP code is required.")]
         public string? ZipCode { get; set; }
+
+        [Required(ErrorMessage = "A city is required.")]
+        public string? City { get; set; }
     }
 }

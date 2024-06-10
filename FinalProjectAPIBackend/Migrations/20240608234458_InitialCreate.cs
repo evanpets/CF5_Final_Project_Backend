@@ -15,20 +15,20 @@ namespace FinalProjectAPIBackend.Migrations
                 name: "PERFORMERS",
                 columns: table => new
                 {
-                    ID = table.Column<int>(type: "int", nullable: false)
+                    PERFORMER_ID = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     NAME = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_PERFORMERS", x => x.ID);
+                    table.PrimaryKey("PK_PERFORMERS", x => x.PERFORMER_ID);
                 });
 
             migrationBuilder.CreateTable(
                 name: "USERS",
                 columns: table => new
                 {
-                    ID = table.Column<int>(type: "int", nullable: false)
+                    USER_ID = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     USERNAME = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
                     PASSWORD = table.Column<string>(type: "nvarchar(512)", maxLength: 512, nullable: true),
@@ -40,64 +40,74 @@ namespace FinalProjectAPIBackend.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_USERS", x => x.ID);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "VENUES",
-                columns: table => new
-                {
-                    ID = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    NAME = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_VENUES", x => x.ID);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "EVENTS",
-                columns: table => new
-                {
-                    ID = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    TITLE = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
-                    DESCRIPTION = table.Column<string>(type: "nvarchar(250)", maxLength: 250, nullable: true),
-                    VenueId = table.Column<int>(type: "int", nullable: true),
-                    PRICE = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
-                    EVENT_DATE = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    CATEGORY = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_EVENTS", x => x.ID);
-                    table.ForeignKey(
-                        name: "FK_VENUE_EVENTS",
-                        column: x => x.VenueId,
-                        principalTable: "VENUES",
-                        principalColumn: "ID",
-                        onDelete: ReferentialAction.SetNull);
+                    table.PrimaryKey("PK_USERS", x => x.USER_ID);
                 });
 
             migrationBuilder.CreateTable(
                 name: "VENUE_ADDRESSES",
                 columns: table => new
                 {
-                    ID = table.Column<int>(type: "int", nullable: false),
+                    V_ADDRESS_ID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     STREET = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
                     STREET_NUMBER = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: true),
+                    CITY = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ZIP_CODE = table.Column<string>(type: "nvarchar(5)", maxLength: 5, nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_VENUE_ADDRESSES", x => x.ID);
+                    table.PrimaryKey("PK_VENUE_ADDRESSES", x => x.V_ADDRESS_ID);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "VENUES",
+                columns: table => new
+                {
+                    VENUE_ID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    NAME = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    VenueAddressId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_VENUES", x => x.VENUE_ID);
                     table.ForeignKey(
                         name: "FK_VENUE_ADDRESS",
-                        column: x => x.ID,
-                        principalTable: "VENUES",
-                        principalColumn: "ID",
+                        column: x => x.VenueAddressId,
+                        principalTable: "VENUE_ADDRESSES",
+                        principalColumn: "V_ADDRESS_ID",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "EVENTS",
+                columns: table => new
+                {
+                    EVENT_ID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    TITLE = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    DESCRIPTION = table.Column<string>(type: "nvarchar(250)", maxLength: 250, nullable: true),
+                    VenueId = table.Column<int>(type: "int", nullable: true),
+                    PRICE = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    EVENT_DATE = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CATEGORY = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    UserId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_EVENTS", x => x.EVENT_ID);
+                    table.ForeignKey(
+                        name: "FK_EVENTS_USERS_UserId",
+                        column: x => x.UserId,
+                        principalTable: "USERS",
+                        principalColumn: "USER_ID",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_VENUE_EVENTS",
+                        column: x => x.VenueId,
+                        principalTable: "VENUES",
+                        principalColumn: "VENUE_ID",
+                        onDelete: ReferentialAction.SetNull);
                 });
 
             migrationBuilder.CreateTable(
@@ -114,15 +124,20 @@ namespace FinalProjectAPIBackend.Migrations
                         name: "FK_EVENTS_PERFORMERS_EVENTS_EventsEventId",
                         column: x => x.EventsEventId,
                         principalTable: "EVENTS",
-                        principalColumn: "ID",
+                        principalColumn: "EVENT_ID",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_EVENTS_PERFORMERS_PERFORMERS_PerformersPerformerId",
                         column: x => x.PerformersPerformerId,
                         principalTable: "PERFORMERS",
-                        principalColumn: "ID",
+                        principalColumn: "PERFORMER_ID",
                         onDelete: ReferentialAction.Cascade);
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_EVENTS_UserId",
+                table: "EVENTS",
+                column: "UserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_EVENTS_VenueId",
@@ -152,6 +167,12 @@ namespace FinalProjectAPIBackend.Migrations
                 column: "USERNAME",
                 unique: true,
                 filter: "[USERNAME] IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_VENUES_VenueAddressId",
+                table: "VENUES",
+                column: "VenueAddressId",
+                unique: true);
         }
 
         /// <inheritdoc />
@@ -161,19 +182,19 @@ namespace FinalProjectAPIBackend.Migrations
                 name: "EVENTS_PERFORMERS");
 
             migrationBuilder.DropTable(
-                name: "USERS");
-
-            migrationBuilder.DropTable(
-                name: "VENUE_ADDRESSES");
-
-            migrationBuilder.DropTable(
                 name: "EVENTS");
 
             migrationBuilder.DropTable(
                 name: "PERFORMERS");
 
             migrationBuilder.DropTable(
+                name: "USERS");
+
+            migrationBuilder.DropTable(
                 name: "VENUES");
+
+            migrationBuilder.DropTable(
+                name: "VENUE_ADDRESSES");
         }
     }
 }

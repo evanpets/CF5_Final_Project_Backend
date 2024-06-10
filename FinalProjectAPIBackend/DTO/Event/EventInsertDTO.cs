@@ -29,16 +29,19 @@ namespace FinalProjectAPIBackend.DTO.Event
         [Required(ErrorMessage = "An event category must be selected.")]
         public EventCategory? Category { get; set; }
 
+        public int UserId {  get; set; }
+
         public override string? ToString()
         {
-            return "InsertDTO: Title: " + Title 
-                + "\nDescription: " + Description  
-                + "\n,Venue Id: " + VenueId 
-                + "\nVenue Insert DTO:\nName" + NewVenue!.Name + 
-                ", VenueAddress:\ni)Street" + NewVenue.VenueAddress!.Street + 
-                ",\nii) Street number" + NewVenue.VenueAddress!.StreetNumber + 
+            return "InsertDTO: Title: " + Title
+                + "\nDescription: " + Description
+                + "\n,Venue Id: " + VenueId
+                + "\nVenue Insert DTO:\nName" + NewVenue!.Name +
+                ", VenueAddress:\ni)Street" + NewVenue.VenueAddress!.Street +
+                ",\nii) Street number" + NewVenue.VenueAddress!.StreetNumber +
                 ",\niii)ZIP Code: " + NewVenue.VenueAddress!.ZipCode +
-                ",\nDate" + Date + 
+                ",\niv)City: " + NewVenue.VenueAddress!.City +
+                ",\nDate" + Date +
                 ",\nCategory: " + Category;
         }
     }

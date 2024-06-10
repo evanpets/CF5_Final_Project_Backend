@@ -25,12 +25,19 @@ namespace FinalProjectAPIBackend.Configuration
                 .ForMember(dest => dest.VenueId, opt => opt.MapFrom(src => src.VenueId)).ReverseMap();
 
             CreateMap<Event, EventUpdateDTO>()
-                    .ForMember(dest => dest.PerformerIds, opt => opt.MapFrom(src => src.Performers!.Select(p => p.PerformerId)))
-                    .ReverseMap()
-                    .ForMember(dest => dest.VenueId, opt => opt.MapFrom(src => src.VenueId)).ReverseMap();
+                .ForMember(dest => dest.Performers, opt => opt.MapFrom(src => src.Performers!.Select(p => new PerformerUpdateDTO { Name = p.Name }))) 
+                .ForMember(dest => dest.VenueStreet, opt => opt.MapFrom(src => src.Venue!.VenueAddress!.Street))
+                .ForMember(dest => dest.VenueStreetNumber, opt => opt.MapFrom(src => src.Venue!.VenueAddress!.StreetNumber))
+                .ForMember(dest => dest.VenueZipCode, opt => opt.MapFrom(src => src.Venue!.VenueAddress!.ZipCode))
+                .ForMember(dest => dest.VenueCity, opt => opt.MapFrom(src => src.Venue!.VenueAddress!.City))
+                .ReverseMap();
 
             CreateMap<Event, EventReadOnlyDTO>()
                     .ForMember(dest => dest.VenueName, opt => opt.MapFrom(src => src.Venue!.Name))
+                    .ForMember(dest => dest.VenueStreet, opt => opt.MapFrom(src => src.Venue!.VenueAddress!.Street))
+                    .ForMember(dest => dest.VenueStreetNumber, opt => opt.MapFrom(src => src.Venue!.VenueAddress!.StreetNumber))
+                    .ForMember(dest => dest.VenueZipCode, opt => opt.MapFrom(src => src.Venue!.VenueAddress!.ZipCode))
+                    .ForMember(dest => dest.VenueCity, opt => opt.MapFrom(src => src.Venue!.VenueAddress!.City))
                     .ForMember(dest => dest.Performers, opt => opt.MapFrom(src => src.Performers!.Select(p => new PerformerReadOnlyDTO { Name = p.Name }))) //PerformerId = p.PerformerId, 
                     .ReverseMap();
 

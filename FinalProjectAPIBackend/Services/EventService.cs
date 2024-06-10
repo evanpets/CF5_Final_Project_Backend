@@ -1,8 +1,12 @@
 ﻿using AutoMapper;
 using FinalProjectAPIBackend.Data;
 using FinalProjectAPIBackend.DTO.Event;
+using FinalProjectAPIBackend.DTO.Performer;
 using FinalProjectAPIBackend.Repositories;
 using FinalProjectAPIBackend.Services.Exceptions;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 
 namespace FinalProjectAPIBackend.Services
@@ -45,15 +49,6 @@ namespace FinalProjectAPIBackend.Services
             return eventEntity;
         }
 
-        public async Task<Event?> DeleteEvent(int eventId)
-        {
-            var eventEntity = await _unitOfWork.EventRepository.GetEventAsync(eventId);
-            if (eventEntity == null) return null;
-
-            await _unitOfWork.EventRepository.DeleteAsync(eventId);
-
-            return eventEntity;
-        }
         public async Task<List<Event>> FindAllEvents()
         {
             return await _unitOfWork.EventRepository.GetAllEventsAsync();
@@ -87,6 +82,12 @@ namespace FinalProjectAPIBackend.Services
         public async Task<List<Event>> GetAllEventsAtVenue(string venueName)
         {
             return await _unitOfWork.EventRepository.GetAllEventsAtVenueAsync(venueName);
+        }
+
+        public async Task<IEnumerable<EventReadOnlyDTO>> GetEventsByUserIdAsync(int userId)
+        {
+            var events = await _unitOfWork.EventRepository.GetEventsByUserIdAsync(userId);
+            return _mapper.Map<IEnumerable<EventReadOnlyDTO>>(events);
         }
 
         public async Task<List<Event>> GetAllEventsFiltered(int pageNumber, int pageSize, EventFiltersDTO eventFiltersDTO)
@@ -140,30 +141,119 @@ namespace FinalProjectAPIBackend.Services
 
         public async Task<Event?> UpdateEvent(int eventId, EventUpdateDTO updateDTO)
         {
-            Event? existingEvent = null;
-            Event? eventEntity = null;
+            Event? existingEvent;
 
+            Console.WriteLine($"Updating event with ID: {eventId}");
+            Console.WriteLine($"Update DTO: {updateDTO}");
             try
             {
                 existingEvent = await _unitOfWork.EventRepository.GetEventAsync(eventId);
-                if (existingEvent is null) return null;
+                if (existingEvent == null)
+                {
+                    Console.WriteLine($"Event with ID {eventId} not found");
+                    return null;
+                }
+
+                Console.WriteLine($"Existing event retrieved: {existingEvent}");
 
                 existingEvent.Title = updateDTO.Title;
                 existingEvent.Description = updateDTO.Description;
-                existingEvent.Venue = await _unitOfWork.VenueRepository.GetVenueAsync(updateDTO.VenueId);
-                existingEvent.Price = updateDTO.Price;
-                existingEvent.Performers = await _unitOfWork.PerformerRepository.GetAllPerformersInEventAsync(updateDTO.EventId)!;
                 existingEvent.Date = updateDTO.Date;
                 existingEvent.Category = updateDTO.Category;
+                existingEvent.Price = updateDTO.Price;
+                var venue = existingEvent.Venue;
+                if (venue != null)
+                {
+                    venue.Name = updateDTO.VenueName;
+                    var venueAddress = venue.VenueAddress;
+                    if (venueAddress != null)
+                    {
+                        venueAddress.Street = updateDTO.VenueStreet;
+                        venueAddress.StreetNumber = updateDTO.VenueStreetNumber;
+                        venueAddress.ZipCode = updateDTO.VenueZipCode;
+                        venueAddress.City = updateDTO.VenueCity;
+                    }
+                }
+
+                if (updateDTO.Performers != null)
+                {
+                    // Remove performers not in the update DTO
+                    var performerNamesInUpdate = updateDTO.Performers.Select(p => p.Name).ToList();
+                    var performersToRemove = existingEvent.Performers!.Where(p => !performerNamesInUpdate.Contains(p.Name)).ToList();
+
+                    foreach (var performerToRemove in performersToRemove)
+                    {
+                        existingEvent.Performers!.Remove(performerToRemove);
+                    }
+
+                    // Add new performers and update existing ones
+                    foreach (var performerDto in updateDTO.Performers)
+                    {
+                        var existingPerformer = existingEvent.Performers!.FirstOrDefault(p => p.Name == performerDto.Name);
+                        if (existingPerformer == null)
+                        {
+                            var newPerformer = new Performer
+                            {
+                                Name = performerDto.Name
+                            };
+                            existingEvent.Performers!.Add(newPerformer);
+                        }
+                    }
+                }
+                //existingEvent.Performers ??= new List<Performer>();
+                //var updatedPerformers = new List<PerformerUpdateDTO>();
+
+                //foreach (var performer in existingEvent.Performers)
+                //{
+                //    Console.WriteLine($"Name: {performer.Name}");
+                //    foreach (var performerDTO in updateDTO.Performers!)
+                //    {
+                //        if (performer.Name == performerDTO.Name)
+                //        {
+                //            Console.WriteLine($"Matched performer: {performerDTO.Name}");
+                //            updatedPerformers.Add(performerDTO);
+                //            break;
+                //        }
+                //        else
+                //        {
+                //            Console.WriteLine($"Not matched performer: {performerDTO.Name}");
+                //            break;
+                //        }
+                //    }
+                //}
+                //existingEvent.Performers = updatedPerformers.Select(p => new Performer { Name = p.Name }).ToList();
+                //if (existingEvent.Performers.Count > 0)
+                //{
+                //    foreach (var performer in existingEvent.Performers!)
+                //    {
+                //        Console.WriteLine($"Updated performer: {performer.Name}");
+                //    }
+                //}
+                //else
+                //{
+                //    Console.WriteLine("\nPerformers list is empty\n");
+                //}
 
                 await _unitOfWork.SaveAsync();
                 _logger!.LogInformation("{Message}", "Event updated successfully");
             }
-            catch (UserNotFoundException)
+            catch (EventNotFoundException)
             {
                 _logger!.LogError("{Message}", "The event was not found.");
                 throw;
             }
+
+            return existingEvent;
+        }
+
+        public async Task<Event?> DeleteEvent(int eventId)
+        {
+            var eventEntity = await _unitOfWork.EventRepository.GetEventAsync(eventId);
+            if (eventEntity == null) return null;
+
+            await _unitOfWork.EventRepository.DeleteAsync(eventId);
+            await _unitOfWork.SaveAsync();
+
             return eventEntity;
         }
 
@@ -181,13 +271,15 @@ namespace FinalProjectAPIBackend.Services
                     {
                         Street = insertDTO.NewVenue.VenueAddress!.Street,
                         StreetNumber = insertDTO.NewVenue.VenueAddress.StreetNumber,
-                        ZipCode = insertDTO.NewVenue.VenueAddress.ZipCode
+                        ZipCode = insertDTO.NewVenue.VenueAddress.ZipCode,
+                        City = insertDTO.NewVenue.VenueAddress.City
                     }
                 } : null,
                 Price = insertDTO.Price,
                 Performers = new List<Performer>(),
                 Date = insertDTO.Date,
-                Category = insertDTO.Category!.Value
+                Category = insertDTO.Category!.Value,
+                UserId = insertDTO.UserId
             };
 
             if (insertDTO.NewPerformers is not null)

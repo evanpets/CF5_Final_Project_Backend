@@ -12,5 +12,7 @@ namespace FinalProjectAPIBackend.Data
         public string? LastName { get; set; }
         public string? PhoneNumber {  get; set; }
         public UserRole Role { get; set; }
+        public virtual ICollection<Event>? Events { get; set; }
+
     }
 }
