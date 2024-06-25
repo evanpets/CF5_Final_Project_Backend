@@ -29,5 +29,8 @@ namespace FinalProjectAPIBackend.DTO.Event
         [Required(ErrorMessage = "An event category must be selected.")]
         public EventCategory? Category { get; set; }
         public int? UserId { get; set; }
+        public string? ImageUrl { get; set; }
+
+
     }
 }

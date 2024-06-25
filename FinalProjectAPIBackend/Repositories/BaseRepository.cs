@@ -4,8 +4,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FinalProjectAPIBackend.Repositories
 {
+
     public abstract class BaseRepository<T> : IBaseRepository<T> where T : class
     {
+
         protected readonly FinalProjectAPIBackendDbContext _context;
         private readonly DbSet<T> _dbSet;
 
@@ -15,10 +17,12 @@ namespace FinalProjectAPIBackend.Repositories
             _dbSet = _context.Set<T>();
         }
 
+
         public virtual async Task AddAsync(T entity)
         {
             await _dbSet.AddAsync(entity);
         }
+
 
         public virtual async Task AddRangeAsync(IEnumerable<T> entities)
         {
@@ -48,12 +52,12 @@ namespace FinalProjectAPIBackend.Repositories
             return entity;
         }
 
+
         public virtual async Task<IEnumerable<T>> GetAllAsync()
         {
             var entities = await _dbSet.ToListAsync();
             return entities;
         }
-
 
 
         public virtual async Task<int> GetCountAsync()

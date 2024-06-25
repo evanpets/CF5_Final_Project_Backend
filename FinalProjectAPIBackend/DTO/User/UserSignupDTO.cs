@@ -28,8 +28,9 @@ namespace FinalProjectAPIBackend.DTO.User
         [Phone(ErrorMessage = "Invalid phone number.")]
         public string? PhoneNumber { get; set; }
 
-        //[EnumDataType(typeof(UserRole), ErrorMessage = "Invalid user role.")]
-        //public UserRole? UserRole { get; set; }
+        [Required(ErrorMessage = "Role is required.")]
+        [EnumDataType(typeof(UserRole), ErrorMessage = "Invalid user role.")]
+        public UserRole Role { get; set; }
 
         public override string? ToString()
         {

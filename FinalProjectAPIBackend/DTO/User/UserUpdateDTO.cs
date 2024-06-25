@@ -27,5 +27,8 @@ namespace FinalProjectAPIBackend.DTO.User
         [StringLength(15, ErrorMessage = "Phone number should not exceed 15 characters.")]
         [Phone(ErrorMessage = "Invalid phone number.")]
         public string? PhoneNumber { get; set; }
+
+        [Required]
+        public string? Role { get; set; }
     }
 }

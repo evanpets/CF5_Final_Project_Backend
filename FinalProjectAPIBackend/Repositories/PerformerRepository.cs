@@ -17,24 +17,7 @@ namespace FinalProjectAPIBackend.Repositories
 
         public async Task<Performer?> GetPerformerByNameAsync(string name)
         {
-            return await _context.Performers.Where(p => p.Name == name).FirstOrDefaultAsync();
-            
-        }
-
-        public async Task<List<Performer>> GetPerformersAsync(ICollection<int> performerIds) ///??? this or below?
-        {
-            return await _context.Performers
-                .Where(p => performerIds.Contains(p.PerformerId)).ToListAsync();
-        }
-
-        public async Task<List<Performer>> GetAllPerformersAsync()
-        {
-            return await _context.Performers.ToListAsync();
-        }
-
-        public async Task<List<Performer>> GetAllPerformersWithNameAsync(string name)
-        {
-            return await _context.Performers.Where(p => p.Name!.Contains(name)).ToListAsync();
+            return await _context.Performers.Where(p => p.Name == name).Distinct().FirstOrDefaultAsync();
         }
 
         public async Task<List<Performer>> GetAllPerformersInEventAsync(int eventId)
@@ -43,6 +26,25 @@ namespace FinalProjectAPIBackend.Repositories
                 .Include(p => p.Events)
                 .Where(p => p.Events.Any(e => e.EventId == eventId))
                 .ToListAsync();
+        }
+
+        public async Task<List<Performer>> GetPerformersRangeAsync(ICollection<int> performerIds)
+        {
+            return await _context.Performers
+                .Where(p => performerIds.Contains(p.PerformerId)).ToListAsync();
+        }
+
+        public async Task<List<Performer>> GetAllPerformersAsync()
+        {
+            return await _context.Performers
+                .GroupBy(p => p.Name)
+                .Select(g => g.FirstOrDefault()!)
+                .ToListAsync();
+        }
+
+        public async Task<List<Performer>> GetAllPerformersWithNameAsync(string name)
+        {
+            return await _context.Performers.Where(p => p.Name!.Contains(name)).ToListAsync();
         }
 
         public async Task<Performer?> UpdatePerformerInformationAsync(Performer updatedPerformer)

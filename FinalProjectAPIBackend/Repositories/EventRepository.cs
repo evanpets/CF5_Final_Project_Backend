@@ -1,7 +1,5 @@
 ﻿using FinalProjectAPIBackend.Data;
 using Microsoft.EntityFrameworkCore;
-using System;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace FinalProjectAPIBackend.Repositories
 {
@@ -13,8 +11,7 @@ namespace FinalProjectAPIBackend.Repositories
 
         public async Task<List<Event>> GetAllEventsAsync()
         {
-            var events = await _context.Events.Include(e => e.Venue).Include(e => e.Performers).ToListAsync();
-            //var events = await _context.Events.ToListAsync();
+            var events = await _context.Events.Include(e => e.Venue).Include(e => e.Performers).Include(e => e.Venue!).ThenInclude(v => v!.VenueAddress).ToListAsync();
 
             return events;
         }
@@ -22,24 +19,17 @@ namespace FinalProjectAPIBackend.Repositories
         public async Task<Event?> GetEventAsync(int eventId)
         {
             var eventEntity = await _context.Events
-                .Include(e => e.Venue).ThenInclude(v=>v.VenueAddress).Include(e => e.Performers)
+                .Include(e => e.Performers).Include(e => e.Venue).ThenInclude(v => v!.VenueAddress)
                 .FirstOrDefaultAsync(e => e.EventId == eventId);
             if (eventEntity == null) return null;
             return eventEntity;
         }
 
-        //public async Task<Event?> GetEventByDateAndVenueAsync(DateTimeOffset date, string venue)
-        //{
-        //   return await _context.Events
-        //        .Include(e => e.Venue).Include(e => e.Performers)
-        //        .FirstOrDefaultAsync(e => e.Date == date && e.Venue!.Name == venue);
-        //}
-
-        public async Task<Event?> GetEventByTitleAsync(string title)
+        public async Task<List<Event>> GetAllEventsWithTitleAsync(string title)
         {
             return await _context.Events
-                .Include(e => e.Venue).ThenInclude(v => v!.VenueAddress).Include(e => e.Performers)
-                .Where(e => e.Title!.Contains(title)).FirstOrDefaultAsync();
+                .Include(e => e.Performers).Include(e => e.Venue).ThenInclude(v => v!.VenueAddress)
+                .Where(e => e.Title!.ToLower().Contains(title.ToLower())).ToListAsync();
         }
 
         public async Task<List<Event>> GetAllEventsOnDateAsync(DateOnly date)
@@ -59,17 +49,17 @@ namespace FinalProjectAPIBackend.Repositories
                 .ToListAsync();
         }
 
-        public async Task<List<Event>> FindAllUpcomingEvents()
+        public async Task<List<Event>> GetAllUpcomingEventsAsync()
         {
             return await _context.Events
-            .Include(e => e.Venue).ThenInclude(v=>v.VenueAddress).Include(e => e.Performers)
+            .Include(e => e.Venue!).ThenInclude(v => v!.VenueAddress).Include(e => e.Performers)
             .Where(e => e.Date >= DateOnly.FromDateTime(DateTime.UtcNow.Date)).OrderBy(e => e.Date).ToListAsync();
         }
 
-        public async Task<List<Event>> FindAllPastEvents()
+        public async Task<List<Event>> GetAllPastEventsAsync()
         {
             return await _context.Events
-                .Include(e => e.Venue).Include(e => e.Performers)
+                .Include(e => e.Venue!).ThenInclude(v => v.VenueAddress).Include(e => e.Performers)
                 .Where(e => e.Date < DateOnly.FromDateTime(DateTime.UtcNow.Date)).ToListAsync();
         }
 
@@ -97,9 +87,18 @@ namespace FinalProjectAPIBackend.Repositories
                 .Where(e => e.Performers!.Any(p => p.Name == existingPerformer.Name)).ToListAsync();
         }
 
-        public async Task<List<DateOnly>> GetAllDatesWithEvents()
+        public async Task<List<DateOnly?>> GetAllDatesWithEventsAsync()
         {
-            return await _context.Events.Where(e => e.Date.HasValue).Select(e => e.Date!.Value).ToListAsync();
+            return await _context.Events.Select(e => e.Date).Distinct().ToListAsync();
+        }
+
+        public async Task<List<Event>> GetAllSavedEventsAsync(int userId)
+        {
+            return await _context.Events.Include(e => e.EventSaves).Include(e => e.User).Where(e => e.EventSaves!.Any(l => l.UserId == userId)).ToListAsync(); 
+        }
+        public async Task<bool> IsEventSavedAsync(int userId, int eventId)
+        {
+            return await _context.EventSaves.AnyAsync(l => l.UserId == userId && l.EventId == eventId);
         }
 
         public async Task<Event?> UpdateEventAsync(Event updatedEvent)
@@ -122,6 +121,28 @@ namespace FinalProjectAPIBackend.Repositories
             }
 
             return await query.ToListAsync();
+        }
+
+        public async Task<EventSave?> GetSaveAsync(int userId, int eventId)
+        {
+            return await _context.EventSaves.FirstOrDefaultAsync(l => l.UserId == userId && l.EventId == eventId);
+        }
+
+        public async Task AddSaveAsync(EventSave save)
+        {
+            await _context.EventSaves.AddAsync(save);
+        }
+
+        public void RemoveSave(EventSave save)
+        {
+             _context.EventSaves.Remove(save);
+        }
+        public async Task<List<Event>> GetSavedEventsByUserIdAsync(int userId)
+        {
+            return await _context.Events
+                .Include(e => e.EventSaves)
+                .Where(e => e.EventSaves!.Any(l => l.UserId == userId))
+                .ToListAsync();
         }
     }
 }

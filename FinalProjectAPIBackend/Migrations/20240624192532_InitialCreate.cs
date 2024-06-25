@@ -17,7 +17,7 @@ namespace FinalProjectAPIBackend.Migrations
                 {
                     PERFORMER_ID = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    NAME = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true)
+                    NAME = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -30,9 +30,9 @@ namespace FinalProjectAPIBackend.Migrations
                 {
                     USER_ID = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    USERNAME = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
-                    PASSWORD = table.Column<string>(type: "nvarchar(512)", maxLength: 512, nullable: true),
-                    EMAIL = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    USERNAME = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    PASSWORD = table.Column<string>(type: "nvarchar(512)", maxLength: 512, nullable: false),
+                    EMAIL = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     FIRST_NAME = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
                     LAST_NAME = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
                     PHONE_NUMBER = table.Column<string>(type: "nvarchar(13)", maxLength: 13, nullable: true),
@@ -65,7 +65,7 @@ namespace FinalProjectAPIBackend.Migrations
                 {
                     VENUE_ID = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    NAME = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    NAME = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     VenueAddressId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
@@ -85,13 +85,14 @@ namespace FinalProjectAPIBackend.Migrations
                 {
                     EVENT_ID = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    TITLE = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    TITLE = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     DESCRIPTION = table.Column<string>(type: "nvarchar(250)", maxLength: 250, nullable: true),
                     VenueId = table.Column<int>(type: "int", nullable: true),
                     PRICE = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
                     EVENT_DATE = table.Column<DateTime>(type: "datetime2", nullable: true),
                     CATEGORY = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    UserId = table.Column<int>(type: "int", nullable: false)
+                    UserId = table.Column<int>(type: "int", nullable: false),
+                    IMAGE_URL = table.Column<string>(type: "nvarchar(250)", maxLength: 250, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -100,14 +101,38 @@ namespace FinalProjectAPIBackend.Migrations
                         name: "FK_EVENTS_USERS_UserId",
                         column: x => x.UserId,
                         principalTable: "USERS",
-                        principalColumn: "USER_ID",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "USER_ID");
                     table.ForeignKey(
                         name: "FK_VENUE_EVENTS",
                         column: x => x.VenueId,
                         principalTable: "VENUES",
                         principalColumn: "VENUE_ID",
                         onDelete: ReferentialAction.SetNull);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "EVENT_SAVES",
+                columns: table => new
+                {
+                    UserId = table.Column<int>(type: "int", nullable: false),
+                    EventId = table.Column<int>(type: "int", nullable: false),
+                    SaveId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("SAVE_ID", x => new { x.UserId, x.EventId });
+                    table.ForeignKey(
+                        name: "FK_EVENT_SAVES_EVENTS_EventId",
+                        column: x => x.EventId,
+                        principalTable: "EVENTS",
+                        principalColumn: "EVENT_ID",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_EVENT_SAVES_USERS_UserId",
+                        column: x => x.UserId,
+                        principalTable: "USERS",
+                        principalColumn: "USER_ID",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -135,6 +160,11 @@ namespace FinalProjectAPIBackend.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_EVENT_SAVES_EventId",
+                table: "EVENT_SAVES",
+                column: "EventId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_EVENTS_UserId",
                 table: "EVENTS",
                 column: "UserId");
@@ -158,15 +188,13 @@ namespace FinalProjectAPIBackend.Migrations
                 name: "UQ_EMAIL",
                 table: "USERS",
                 column: "EMAIL",
-                unique: true,
-                filter: "[EMAIL] IS NOT NULL");
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "UQ_USERNAME",
                 table: "USERS",
                 column: "USERNAME",
-                unique: true,
-                filter: "[USERNAME] IS NOT NULL");
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_VENUES_VenueAddressId",
@@ -178,6 +206,9 @@ namespace FinalProjectAPIBackend.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "EVENT_SAVES");
+
             migrationBuilder.DropTable(
                 name: "EVENTS_PERFORMERS");
 

@@ -28,7 +28,6 @@ namespace FinalProjectAPIBackend.DTO.User
         [StringLength(50, ErrorMessage = "Lastname should not exceed 50 characters.")]
         public string? Lastname { get; set; }
         public string? PhoneNumber { get; set; }
-
         public UserRole Role { get; set; } = UserRole.User;
     }
 }

@@ -24,6 +24,15 @@ namespace FinalProjectAPIBackend.Repositories
             return user;
         }
 
+        public async Task<List<User?>> GetAllUsersAsync()
+        {
+            var users = await _context.Users.ToListAsync();
+            //if (users.Count == 0)
+            //{
+            //    return new List<User?>();
+            //}
+            return users!;
+        }
 
         public async Task<User?> GetByPhoneNumberAsync(string phoneNumber)
         {
@@ -33,7 +42,7 @@ namespace FinalProjectAPIBackend.Repositories
 
         public async Task<User?> GetByUsernameAsync(string username)
         {
-            var ExistingUser = await _context.Users.Where(u => u.Username == username).FirstOrDefaultAsync();
+            var ExistingUser = await _context.Users.Where(u => u.Username!.ToLower() == username.ToLower()).FirstOrDefaultAsync();
             return ExistingUser;
         }
 

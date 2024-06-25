@@ -29,20 +29,33 @@ namespace FinalProjectAPIBackend.DTO.Event
         [Required(ErrorMessage = "An event category must be selected.")]
         public EventCategory? Category { get; set; }
 
+        public string? ImageUrl { get; set; }
+
         public int UserId {  get; set; }
 
         public override string? ToString()
         {
-            return "InsertDTO: Title: " + Title
-                + "\nDescription: " + Description
-                + "\n,Venue Id: " + VenueId
-                + "\nVenue Insert DTO:\nName" + NewVenue!.Name +
-                ", VenueAddress:\ni)Street" + NewVenue.VenueAddress!.Street +
-                ",\nii) Street number" + NewVenue.VenueAddress!.StreetNumber +
-                ",\niii)ZIP Code: " + NewVenue.VenueAddress!.ZipCode +
-                ",\niv)City: " + NewVenue.VenueAddress!.City +
-                ",\nDate" + Date +
-                ",\nCategory: " + Category;
+            if (VenueId != null)
+            {
+                return "InsertDTO: Title: " + Title
+                    + "\nDescription: " + Description
+                    + "\nVenue Id: " + VenueId
+                    + "\nDate: " + Date
+                    + "\nCategory: " + Category
+                    + "\nImage URL" + ImageUrl;
+            }
+            else
+            {
+                return "InsertDTO: Title: " + Title
+                    + "\nDescription: " + Description
+                    + "\nVenue Insert DTO:\nName: " + NewVenue!.Name +
+                    ",\nVenue Address:\nStreet: " + NewVenue!.VenueAddress!.Street +
+                    ",\nStreet number: " + NewVenue!.VenueAddress!.StreetNumber +
+                    ",\nZIP Code: " + NewVenue!.VenueAddress!.ZipCode +
+                    ",\nCity: " + NewVenue!.VenueAddress!.City +
+                    ",\nDate: " + Date +
+                    ",\nCategory: " + Category;
+            }
         }
     }
 }

@@ -1,10 +1,12 @@
 ﻿using AutoMapper;
 using FinalProjectAPIBackend.Repositories;
+using Microsoft.Extensions.Logging;
 
 namespace FinalProjectAPIBackend.Services
 {
     public class ApplicationService : IApplicationService
     {
+
         protected readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
         private readonly ILogger<UserService>? _userLogger;
@@ -12,7 +14,7 @@ namespace FinalProjectAPIBackend.Services
         private readonly ILogger<VenueService>? _venueLogger;
         private readonly ILogger<PerformerService>? _performerLogger;
 
-        public ApplicationService(IUnitOfWork unitOfWork, IMapper mapper, ILogger<UserService>? userLogger, 
+        public ApplicationService(IUnitOfWork unitOfWork, IMapper mapper, ILogger<UserService>? userLogger,
             ILogger<EventService>? eventLogger, ILogger<VenueService>? venueLogger, ILogger<PerformerService>? performerLogger)
         {
             _unitOfWork = unitOfWork;
@@ -22,6 +24,7 @@ namespace FinalProjectAPIBackend.Services
             _venueLogger = venueLogger;
             _performerLogger = performerLogger;
         }
+
 
         public EventService EventService => new(_unitOfWork, _mapper, _eventLogger!);
 

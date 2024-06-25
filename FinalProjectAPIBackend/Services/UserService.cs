@@ -71,7 +71,7 @@ namespace FinalProjectAPIBackend.Services
             return user;
         }
 
-        public async Task<User?> GetUserById(int id)
+        public async Task<User?> FindUserByIdAsync(int id)
         {
             User? user;
             try
@@ -87,7 +87,7 @@ namespace FinalProjectAPIBackend.Services
             return user;
         }
 
-        public async Task<User?> GetUserByUsernameAsync(string username)
+        public async Task<User?> FindUserByUsernameAsync(string username)
         {
             User? user;
 
@@ -105,7 +105,7 @@ namespace FinalProjectAPIBackend.Services
             return user;
         }
 
-        public async Task<User?> GetUserByEmailAsync(string email)
+        public async Task<User?> FindUserByEmailAsync(string email)
         {
             User? user;
 
@@ -123,100 +123,9 @@ namespace FinalProjectAPIBackend.Services
             return user;
         }
 
-        public async Task<List<User>> GetAllUsersFiltered(int pageNumber, int pageSize, UserFiltersDTO userFiltersDTO)
+        public async Task<List<User?>> FindAllUsersAsync()
         {
-            List<User> users = new();
-            List<Func<User, bool>> filters = new();
-
-            try
-            {
-                if (!string.IsNullOrEmpty(userFiltersDTO.Username))
-                {
-                    filters.Add(u => u.Username == userFiltersDTO.Username);
-                }
-                if (!string.IsNullOrEmpty(userFiltersDTO.Email))
-                {
-                    filters.Add(u => u.Email == userFiltersDTO.Email);
-                }
-                users = await _unitOfWork!.UserRepository.GetAllUsersFilteredAsync(pageNumber, pageSize,
-                filters);
-                _logger!.LogInformation("{Message}", "Success returning filtered users");
-            }
-            catch (Exception e)
-            {
-                _logger!.LogError("{Message}{Exception}", e.Message, e.StackTrace);
-                throw;
-            }
-            return users;
-        }
-
-        public async Task<User?> UpdateUserAsync(int userId, UserUpdateDTO updateDTO)
-        {
-            User? existingUser;
-
-            try
-            {
-                existingUser = await _unitOfWork!.UserRepository.GetAsync(userId);
-                if (existingUser is null) return null;
-
-                existingUser.Username = updateDTO.Username;
-                existingUser.Password = EncryptionUtil.Encrypt(updateDTO.Password!);
-                existingUser.Email = updateDTO.Email;
-                existingUser.FirstName = updateDTO.FirstName;
-                existingUser.LastName = updateDTO.LastName;
-                existingUser.PhoneNumber = updateDTO.PhoneNumber;
-                existingUser.Role = UserRole.User;
-
-                await _unitOfWork.SaveAsync();
-                _logger!.LogInformation("{Message}", "User: " + existingUser + " updated successfully");
-            }
-            catch (UserNotFoundException)
-            {
-                _logger!.LogError("{Message}", "The user was not found.");
-                throw;
-            }
-            return existingUser;
-        }
-
-        public string CreateUserToken(int userId, string? username, string? email, string? appSecurityKey)
-        {
-            var securityKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(appSecurityKey!));
-            var signingCredentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
-
-            var claimsInfo = new List<Claim>
-            {
-                new Claim(ClaimTypes.Name, username!),
-                new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
-                new Claim(ClaimTypes.Email, email!),
-                //new Claim(ClaimTypes.Role, UserRole.User.ToString())
-            };
-
-            var issuer = "https://localhost:5001";
-            var audience = "https://localhost:4200";
-
-            var jwtSecurityToken = new JwtSecurityToken(issuer, audience, claimsInfo, DateTime.UtcNow, DateTime.UtcNow.AddHours(3), signingCredentials);
-            
-            var userToken = new JwtSecurityTokenHandler().WriteToken(jwtSecurityToken);
-
-            return userToken;
-        }
-
-        public async Task DeleteUserAsync(int id)
-        {
-            bool deleted;
-            try
-            {
-                deleted = await _unitOfWork!.UserRepository.DeleteAsync(id);
-                if (!deleted)
-                {
-                    throw new UserNotFoundException("UserNotFound");
-                }
-            }
-            catch (UserNotFoundException)
-            {
-                _logger!.LogError("{Message}", "A user to be deleted was not found.");
-                throw;
-            }
+            return await _unitOfWork!.UserRepository.GetAllUsersAsync();
         }
 
         public async Task<List<User>> GetAllUsersFilteredAsync(int pageNumber, int pageSize, UserFiltersDTO userFiltersDTO)
@@ -246,6 +155,80 @@ namespace FinalProjectAPIBackend.Services
             return users;
         }
 
+        public async Task<User?> UpdateUserAsync(int userId, UserUpdateDTO updateDTO)
+        {
+            User? existingUser;
+
+            try
+            {
+                existingUser = await _unitOfWork!.UserRepository.GetAsync(userId);
+                if (existingUser is null) return null;
+
+                existingUser.Username = updateDTO.Username;
+                existingUser.Email = updateDTO.Email;
+                existingUser.FirstName = updateDTO.FirstName;
+                existingUser.LastName = updateDTO.LastName;
+                existingUser.PhoneNumber = updateDTO.PhoneNumber;
+                if (!string.IsNullOrEmpty(updateDTO.Password) && updateDTO.Password != existingUser.Password)
+                {
+                    existingUser.Password = EncryptionUtil.Encrypt(updateDTO.Password);
+                }
+                existingUser.Role = (UserRole)Enum.Parse(typeof(UserRole), updateDTO.Role!);
+
+
+                await _unitOfWork.SaveAsync();
+                _logger!.LogInformation("{Message}", "User: " + existingUser + " updated successfully");
+            }
+            catch (UserNotFoundException)
+            {
+                _logger!.LogError("{Message}", "The user was not found.");
+                throw;
+            }
+            return existingUser;
+        }
+
+        public string CreateUserToken(int userId, string? username, string? email, UserRole? role, string? appSecurityKey)
+        {
+            var securityKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(appSecurityKey!));
+            var signingCredentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+
+            var claimsInfo = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, username!),
+                new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
+                new Claim(ClaimTypes.Email, email!),
+                new Claim(ClaimTypes.Role, role.ToString()!)
+            };
+
+            var issuer = "https://localhost:5001";
+            var audience = "https://localhost:4200";
+
+            var jwtSecurityToken = new JwtSecurityToken(issuer, audience, claimsInfo, DateTime.UtcNow, DateTime.UtcNow.AddHours(3), signingCredentials);
+            
+            var userToken = new JwtSecurityTokenHandler().WriteToken(jwtSecurityToken);
+
+            return userToken;
+        }
+
+        public async Task DeleteUserAsync(int userId)
+        {
+            bool deleted;
+            try
+            {
+                deleted = await _unitOfWork!.UserRepository.DeleteAsync(userId);
+                if (!deleted)
+                {
+                    throw new UserNotFoundException("User Not Found");
+                }
+                await _unitOfWork.SaveAsync();
+            }
+            catch (UserNotFoundException)
+            {
+                _logger!.LogError("{Message}", "A user to be deleted was not found.");
+                throw;
+            }
+        }
+
         private User ExtractUser(UserSignupDTO signupDTO)
         {
             return new User()
@@ -256,7 +239,7 @@ namespace FinalProjectAPIBackend.Services
                 FirstName = signupDTO.FirstName,
                 LastName = signupDTO.LastName,
                 PhoneNumber = signupDTO.PhoneNumber,
-                Role = UserRole.User
+                Role = signupDTO.Role
             };
         }
 

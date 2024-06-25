@@ -17,6 +17,7 @@ namespace FinalProjectAPIBackend.Data
         public virtual DbSet<Performer> Performers { get; set; }
         public virtual DbSet<Venue> Venues { get; set; }
         public virtual DbSet<VenueAddress> VenueAddresses { get; set; }
+        public virtual DbSet<EventSave> EventSaves { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -45,7 +46,8 @@ namespace FinalProjectAPIBackend.Data
 
                 entity.HasMany(u => u.Events)
                 .WithOne(e => e.User)
-                .HasForeignKey(e => e.UserId);
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.SetNull);
             });
 
             modelBuilder.Entity<Event>(entity =>
@@ -53,20 +55,23 @@ namespace FinalProjectAPIBackend.Data
                 entity.ToTable("EVENTS");
                 entity.Property(e => e.EventId).HasColumnName("EVENT_ID");
                 entity.Property(e => e.Title)
-                    .HasMaxLength(50).HasColumnName("TITLE");
+                    .HasMaxLength(100).HasColumnName("TITLE");
                 entity.Property(e => e.Description)
-                    .HasMaxLength(250).HasColumnName("DESCRIPTION");
+                    .HasMaxLength(500).HasColumnName("DESCRIPTION");
                 entity.Property(e => e.Price).HasColumnType("decimal(18,2)")
                     .HasColumnName("PRICE");
                 entity.Property(e => e.Date).HasColumnName("EVENT_DATE")
                 .HasConversion
                     (d => d.HasValue ? d.Value.ToDateTime(TimeOnly.MinValue) : (DateTime?)null,
                     d => d.HasValue ? DateOnly.FromDateTime(d.Value) : (DateOnly?)null);
-            entity.Property(e => e.Category)
+                entity.Property(e => e.Category)
                     .HasColumnName("CATEGORY")
                     .HasConversion<string>()
                     .HasMaxLength(50)
                     .IsRequired();
+                entity.Property(e => e.ImageUrl)
+                .HasColumnName("IMAGE_URL")
+                .HasMaxLength(250);
 
                 entity.HasOne(e => e.Venue).WithMany(v => v.Events)
                     .HasForeignKey(e => e.VenueId).HasConstraintName("FK_VENUE_EVENTS")
@@ -77,7 +82,8 @@ namespace FinalProjectAPIBackend.Data
 
                 entity.HasOne(e => e.User)
                     .WithMany(u => u.Events)
-                    .HasForeignKey(e => e.UserId);
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.NoAction);
 
             });
 
@@ -101,8 +107,6 @@ namespace FinalProjectAPIBackend.Data
                 entity.Property(e => e.PerformerId).HasColumnName("PERFORMER_ID");
                 entity.Property(e => e.Name)
                     .HasMaxLength(50).HasColumnName("NAME");
-                //entity.HasMany(p => p.Events).WithMany(e => e.Performers)
-                //.UsingEntity("EVENTS_PERFORMERS");
 
             });
 
@@ -118,6 +122,22 @@ namespace FinalProjectAPIBackend.Data
                     .HasMaxLength(5).HasColumnName("ZIP_CODE");
                 entity.Property(e => e.City)
                     .HasColumnName("CITY");
+            });
+
+            modelBuilder.Entity<EventSave>(entity =>
+            {
+                entity.ToTable("EVENT_SAVES");
+                entity.HasKey(l => new { l.UserId, l.EventId }).HasName("SAVE_ID");
+
+                entity.HasOne(e => e.User)
+                    .WithMany(u => u.EventSaves)
+                    .HasForeignKey(l => l.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.Event)
+                    .WithMany(e => e.EventSaves)
+                    .HasForeignKey(e => e.EventId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
         }
     }

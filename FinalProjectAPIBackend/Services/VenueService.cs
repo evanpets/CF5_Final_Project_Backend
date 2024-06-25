@@ -20,58 +20,64 @@ namespace FinalProjectAPIBackend.Services
             _logger = logger;
         }
 
-        public async Task<Venue?> AddVenue(VenueInsertDTO insertDTO)
+        public async Task<Venue?> AddVenueAsync(VenueInsertDTO insertDTO)
         {
-            Venue venue = new Venue();
-
-            venue.Name = insertDTO.Name;
-
-            if (insertDTO.VenueAddress != null)
+            Venue venue = new Venue
             {
-                var venueAddress = _mapper.Map<VenueAddress>(insertDTO.VenueAddress);
-                venue.VenueAddress = venueAddress;
-            }
+                Name = insertDTO.Name,
+                VenueAddress = insertDTO.VenueAddress != null ? _mapper.Map<VenueAddress>(insertDTO.VenueAddress) : null
+            };
 
             await _unitOfWork.VenueRepository.AddAsync(venue);
+            await _unitOfWork.SaveAsync();
             return venue;
         }
 
-        public async Task<Venue?> DeleteVenue(int venueId)
+        public async Task<Venue?> DeleteVenueAsync(int venueId)
         {
             var venue = await _unitOfWork.VenueRepository.GetVenueAsync(venueId);
 
             if (venue is null) return null;
 
             await _unitOfWork.VenueRepository.DeleteVenueAsync(venueId);
+            await _unitOfWork.SaveAsync();
             return venue;
         }
 
-        public async Task<Venue?> FindVenueByName(string name)
+        public async Task<Venue?> FindVenueByNameAsync(string venueName)
         {
-            return await _unitOfWork.VenueRepository.GetVenueByNameAsync(name);
+            return await _unitOfWork.VenueRepository.GetVenueByNameAsync(venueName);
         }
 
-        public async Task<List<Venue>> GetAllVenues()
+        public async Task<Venue?> FindVenueByIdAsync(int venueId)
+        {
+            return await _unitOfWork.VenueRepository.GetVenueAsync(venueId);
+        }
+
+        public async Task<List<Venue>> FindAllVenuesAsync()
         {
             return await _unitOfWork.VenueRepository.GetAllVenuesAsync();
         }
 
-        public async Task<Venue?> UpdateVenueInfo(int venueId, VenueUpdateDTO updateDTO)
+        public async Task<Venue?> UpdateVenueInfoAsync(int venueId, VenueUpdateDTO updateDTO)
         {
             Venue? existingVenue;
-            Venue? updatedVenue = null;
 
             try
             {
                 existingVenue = await _unitOfWork.VenueRepository.GetVenueAsync(venueId);
-                if (existingVenue is null) return null;
+                if (existingVenue == null) return null;
 
                 existingVenue.Name = updateDTO.Name;
 
-                if (updateDTO.VenueAddress is not null)
+                if (updateDTO.VenueAddress != null)
                 {
                     var venueAddress = _mapper.Map<VenueAddress>(updateDTO.VenueAddress);
-                    existingVenue.VenueAddress = venueAddress;
+                    existingVenue.VenueAddress!.VenueAddressId = venueAddress.VenueAddressId;
+                    existingVenue.VenueAddress!.Street = venueAddress.Street;
+                    existingVenue.VenueAddress!.StreetNumber = venueAddress.StreetNumber;
+                    existingVenue.VenueAddress!.ZipCode = venueAddress.ZipCode;
+                    existingVenue.VenueAddress!.City = venueAddress.City;
                 }
 
                 await _unitOfWork.SaveAsync();
@@ -82,7 +88,7 @@ namespace FinalProjectAPIBackend.Services
                 _logger!.LogError("{Message}", "The venue was not found.");
                 throw;
             }
-            return updatedVenue;
+            return existingVenue;
         }
     }
 }

@@ -1,9 +1,11 @@
 ﻿using AutoMapper;
 using FinalProjectAPIBackend.Data;
+using FinalProjectAPIBackend.DTO;
 using FinalProjectAPIBackend.DTO.Event;
 using FinalProjectAPIBackend.DTO.Performer;
 using FinalProjectAPIBackend.Repositories;
 using FinalProjectAPIBackend.Services.Exceptions;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,7 +26,7 @@ namespace FinalProjectAPIBackend.Services
             _logger = logger;
         }
 
-        public async Task<Event?> CreateEvent(EventInsertDTO insertDTO)
+        public async Task<Event?> CreateEventAsync(EventInsertDTO insertDTO)
         {
             var eventEntity = ExtractEvent(insertDTO);
             if (insertDTO.NewVenue != null)
@@ -35,12 +37,26 @@ namespace FinalProjectAPIBackend.Services
 
             if (insertDTO.NewPerformers != null && insertDTO.NewPerformers.Any())
             {
-                var performers = insertDTO.NewPerformers.Select(p => _mapper.Map<Performer>(p)).ToList();
+                var performers = new List<Performer>();
+                foreach (var performer in insertDTO.NewPerformers)
+                {
+                    var existingPerformer = await _unitOfWork.PerformerRepository.GetPerformerByNameAsync(performer.Name!);
+                    if (existingPerformer != null)
+                    {
+                        performers.Add(existingPerformer);
+                    }
+                    else
+                    {
+                        var newPerformer = _mapper.Map<Performer>(performer);
+                        performers.Add(newPerformer);
+                    }
+                }
                 eventEntity.Performers = performers;
+
             }
             else if (insertDTO.PerformerIds != null && insertDTO.PerformerIds.Any())
             {
-                var performers = await _unitOfWork.PerformerRepository.GetPerformersAsync(insertDTO.PerformerIds);
+                var performers = await _unitOfWork.PerformerRepository.GetPerformersRangeAsync(insertDTO.PerformerIds);
                 eventEntity.Performers = performers.ToList();
             }
 
@@ -49,48 +65,52 @@ namespace FinalProjectAPIBackend.Services
             return eventEntity;
         }
 
-        public async Task<List<Event>> FindAllEvents()
+        public async Task<List<Event>> FindAllEventsAsync()
         {
             return await _unitOfWork.EventRepository.GetAllEventsAsync();
         }
 
-        public async Task<List<Event>> FindAllPastEvents()
+        public async Task<List<Event>> FindAllPastEventsAsync()
         {
-            return await _unitOfWork.EventRepository.FindAllPastEvents();
+            return await _unitOfWork.EventRepository.GetAllPastEventsAsync();
         }
 
-        public async Task<List<Event>> FindAllUpcomingEvents()
+        public async Task<List<Event>> FindAllUpcomingEventsAsync()
         {
-            return await _unitOfWork.EventRepository.FindAllUpcomingEvents();
+            return await _unitOfWork.EventRepository.GetAllUpcomingEventsAsync();
         }
 
-        public async Task<Event?> FindEvent(int eventId)
+        public async Task<Event?> FindEventAsync(int eventId)
         {
             return await _unitOfWork.EventRepository.GetEventAsync(eventId);
         }
 
-        public async Task<Event?> FindEventByTitle(string title)
+        public async Task<List<Event>> FindAllEventsWithTitleAsync(string title)
         {
-            return await _unitOfWork.EventRepository.GetEventByTitleAsync(title);
+            return await _unitOfWork.EventRepository.GetAllEventsWithTitleAsync(title);
         }
 
-        public async Task<List<Event>> FindEventsWithPerformer(string performer)
+        public async Task<List<Event>> FindAllEventsWithPerformerAsync(string performer)
         {
             return await _unitOfWork.EventRepository.GetAllEventsWithPerformerAsync(performer);
         }
 
-        public async Task<List<Event>> GetAllEventsAtVenue(string venueName)
+        public async Task<List<Event>> FindAllEventsAtVenueAsync(string venueName)
         {
             return await _unitOfWork.EventRepository.GetAllEventsAtVenueAsync(venueName);
         }
 
-        public async Task<IEnumerable<EventReadOnlyDTO>> GetEventsByUserIdAsync(int userId)
+        public async Task<IEnumerable<EventReadOnlyDTO>> FindEventsByUserIdAsync(int userId)
         {
             var events = await _unitOfWork.EventRepository.GetEventsByUserIdAsync(userId);
             return _mapper.Map<IEnumerable<EventReadOnlyDTO>>(events);
         }
 
-        public async Task<List<Event>> GetAllEventsFiltered(int pageNumber, int pageSize, EventFiltersDTO eventFiltersDTO)
+        public async Task<bool> IsEventSavedAsync(int userId, int eventId)
+        {
+            return await _unitOfWork.EventRepository.IsEventSavedAsync(userId, eventId);
+        }
+        public async Task<List<Event>> GetAllEventsFilteredAsync(int pageNumber, int pageSize, EventFiltersDTO eventFiltersDTO)
         {
             List<Event> events = new();
             List<Func<Event, bool>> filters = new();
@@ -130,33 +150,29 @@ namespace FinalProjectAPIBackend.Services
             return events;
         }
 
-        public async Task<List<Event>> GetAllEventsOnDate(DateOnly date)
+        public async Task<List<Event>> FindAllEventsOnDateAsync(DateOnly date)
         {
             return await _unitOfWork.EventRepository.GetAllEventsOnDateAsync(date);
         }
-        public async Task<List<DateOnly>> GetAllDatesWithEvents()
+        public async Task<List<DateOnly?>> FindAllDatesWithEventsAsync()
         {
-            return await _unitOfWork.EventRepository.GetAllDatesWithEvents();
+            return await _unitOfWork.EventRepository.GetAllDatesWithEventsAsync();
         }
 
-        public async Task<Event?> UpdateEvent(int eventId, EventUpdateDTO updateDTO)
+        public async Task<List<Event>> FindAllSavedEventsAsync(int userId)
+        {
+            return await _unitOfWork.EventRepository.GetAllSavedEventsAsync(userId);
+        }
+
+        public async Task<Event?> UpdateEventAsync(int eventId, EventUpdateDTO updateDTO, IFormFile? eventImage)
         {
             Event? existingEvent;
 
-            Console.WriteLine($"Updating event with ID: {eventId}");
-            Console.WriteLine($"Update DTO: {updateDTO}");
             try
             {
                 existingEvent = await _unitOfWork.EventRepository.GetEventAsync(eventId);
-                if (existingEvent == null)
-                {
-                    Console.WriteLine($"Event with ID {eventId} not found");
-                    return null;
-                }
 
-                Console.WriteLine($"Existing event retrieved: {existingEvent}");
-
-                existingEvent.Title = updateDTO.Title;
+                existingEvent!.Title = updateDTO.Title;
                 existingEvent.Description = updateDTO.Description;
                 existingEvent.Date = updateDTO.Date;
                 existingEvent.Category = updateDTO.Category;
@@ -177,7 +193,6 @@ namespace FinalProjectAPIBackend.Services
 
                 if (updateDTO.Performers != null)
                 {
-                    // Remove performers not in the update DTO
                     var performerNamesInUpdate = updateDTO.Performers.Select(p => p.Name).ToList();
                     var performersToRemove = existingEvent.Performers!.Where(p => !performerNamesInUpdate.Contains(p.Name)).ToList();
 
@@ -186,7 +201,6 @@ namespace FinalProjectAPIBackend.Services
                         existingEvent.Performers!.Remove(performerToRemove);
                     }
 
-                    // Add new performers and update existing ones
                     foreach (var performerDto in updateDTO.Performers)
                     {
                         var existingPerformer = existingEvent.Performers!.FirstOrDefault(p => p.Name == performerDto.Name);
@@ -200,39 +214,19 @@ namespace FinalProjectAPIBackend.Services
                         }
                     }
                 }
-                //existingEvent.Performers ??= new List<Performer>();
-                //var updatedPerformers = new List<PerformerUpdateDTO>();
+                if (eventImage != null)
+                {
+                    var _uploadFolderPath = Path.Combine(Directory.GetCurrentDirectory(), "Uploads");
+                    var imageFileName = $"{Guid.NewGuid()}{Path.GetExtension(eventImage.FileName)}";
+                    var imagePath = Path.Combine(_uploadFolderPath, imageFileName);
 
-                //foreach (var performer in existingEvent.Performers)
-                //{
-                //    Console.WriteLine($"Name: {performer.Name}");
-                //    foreach (var performerDTO in updateDTO.Performers!)
-                //    {
-                //        if (performer.Name == performerDTO.Name)
-                //        {
-                //            Console.WriteLine($"Matched performer: {performerDTO.Name}");
-                //            updatedPerformers.Add(performerDTO);
-                //            break;
-                //        }
-                //        else
-                //        {
-                //            Console.WriteLine($"Not matched performer: {performerDTO.Name}");
-                //            break;
-                //        }
-                //    }
-                //}
-                //existingEvent.Performers = updatedPerformers.Select(p => new Performer { Name = p.Name }).ToList();
-                //if (existingEvent.Performers.Count > 0)
-                //{
-                //    foreach (var performer in existingEvent.Performers!)
-                //    {
-                //        Console.WriteLine($"Updated performer: {performer.Name}");
-                //    }
-                //}
-                //else
-                //{
-                //    Console.WriteLine("\nPerformers list is empty\n");
-                //}
+                    using (var stream = new FileStream(imagePath, FileMode.Create))
+                    {
+                        await eventImage.CopyToAsync(stream);
+                    }
+
+                    existingEvent.ImageUrl = Path.Combine("Uploads", imageFileName);
+                }
 
                 await _unitOfWork.SaveAsync();
                 _logger!.LogInformation("{Message}", "Event updated successfully");
@@ -246,7 +240,7 @@ namespace FinalProjectAPIBackend.Services
             return existingEvent;
         }
 
-        public async Task<Event?> DeleteEvent(int eventId)
+        public async Task<Event?> DeleteEventAsync(int eventId)
         {
             var eventEntity = await _unitOfWork.EventRepository.GetEventAsync(eventId);
             if (eventEntity == null) return null;
@@ -255,6 +249,29 @@ namespace FinalProjectAPIBackend.Services
             await _unitOfWork.SaveAsync();
 
             return eventEntity;
+        }
+
+        public async Task<bool> SaveEventAsync(int userId, int eventId)
+        {
+            var existingSave = await _unitOfWork.EventRepository.GetSaveAsync(userId, eventId);
+            if (existingSave != null)
+            {
+                return true;
+            }
+            var save = new EventSave { UserId = userId, EventId = eventId };
+            await _unitOfWork.EventRepository.AddSaveAsync(save);
+            return await _unitOfWork.SaveAsync();
+        }
+
+        public async Task<bool> UnsaveEventAsync(int userId, int eventId)
+        {
+            var save = await _unitOfWork.EventRepository.GetSaveAsync(userId, eventId);
+            if (save != null)
+            {
+                _unitOfWork.EventRepository.RemoveSave(save);
+                return await _unitOfWork.SaveAsync();
+            }
+            return true;
         }
 
         private Event ExtractEvent(EventInsertDTO insertDTO)
@@ -279,7 +296,8 @@ namespace FinalProjectAPIBackend.Services
                 Performers = new List<Performer>(),
                 Date = insertDTO.Date,
                 Category = insertDTO.Category!.Value,
-                UserId = insertDTO.UserId
+                UserId = insertDTO.UserId,
+                ImageUrl = insertDTO.ImageUrl
             };
 
             if (insertDTO.NewPerformers is not null)

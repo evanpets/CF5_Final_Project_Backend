@@ -17,17 +17,17 @@ namespace FinalProjectAPIBackend.Services
             _logger = logger;
         }
 
-        public async Task<Performer?> FindPerformer(string name)
+        public async Task<Performer?> FindPerformerAsync(string name)
         {
             return await _unitOfWork.PerformerRepository.GetPerformerByNameAsync(name);
         }
 
-        public async Task<List<Performer>> FindAllPerformers()
+        public async Task<List<Performer>> FindAllPerformersAsync()
         {
             return await _unitOfWork.PerformerRepository.GetAllPerformersAsync();
         }
 
-        public async Task<List<Performer>> FindAllPerformersWithName(string name)
+        public async Task<List<Performer>> FindAllPerformersWithNameAsync(string name)
         {
             return await _unitOfWork.PerformerRepository.GetAllPerformersWithNameAsync(name);
         }

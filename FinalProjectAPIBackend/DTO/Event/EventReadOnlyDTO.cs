@@ -24,16 +24,14 @@ namespace FinalProjectAPIBackend.DTO.Event
         public string? VenueCity { get; set; }
         public decimal? Price { get; set; }
         public EventCategory Category { get; set; }
-
         public ICollection<PerformerReadOnlyDTO>? Performers { get; set; }
 
         [Required(ErrorMessage = "A valid date must be selected.")]
         public DateOnly? Date { get; set; }
-
-        //[Required(ErrorMessage = "An event category must be selected.")]
-        //public EventCategory? Category { get; set; }
-
         public int? UserId { get; set; }
+        public string? ImageUrl { get; set; }
+        public bool IsSaved { get; set; } = false;
+
 
 
         public override string? ToString()

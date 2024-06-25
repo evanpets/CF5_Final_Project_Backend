@@ -7,6 +7,7 @@ using FinalProjectAPIBackend.Repositories;
 using FinalProjectAPIBackend.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -28,8 +29,10 @@ namespace FinalProjectAPIBackend
             });
 
             var connString = builder.Configuration.GetConnectionString("DefaultConnection");
+
             builder.Services.AddDbContext<FinalProjectAPIBackendDbContext>(options => options.UseSqlServer(connString));
             builder.Services.AddScoped<IApplicationService, ApplicationService>();
+
             builder.Services.AddRepositories();
             builder.Services.AddScoped(provider =>
             new MapperConfiguration(config =>
@@ -53,9 +56,9 @@ namespace FinalProjectAPIBackend
                     ValidateAudience = false,
                     RequireExpirationTime = false,
                     ValidateLifetime = false,
-                    /// return new JsonWebToken(token); in .NET 8
-                    /// Override the default token signature validation an do NOT validtae the signature
-                    /// Just return the token
+                    // return new JsonWebToken(token); in .NET 8
+                    // Override the default token signature validation an do NOT validtte the signature
+                    // Just return the token
                     SignatureValidator = (token, validator) => { return new JsonWebToken(token); }
                 };
             });
@@ -78,6 +81,7 @@ namespace FinalProjectAPIBackend
             {
                 options.SwaggerDoc("v1", new OpenApiInfo { Title = "Event Management API", Version = "v1" });
                 // Non-nullable reference are properly documented
+                options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, "FinalProjectAPIBackend.xml"));
                 options.SupportNonNullableReferenceTypes();
                 options.OperationFilter<AuthorizeOperationFilter>();
                 options.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme,
@@ -95,16 +99,21 @@ namespace FinalProjectAPIBackend
             builder.Services.AddCors(options => {
                 options.AddPolicy("AllowAll",
                     b => b.AllowAnyMethod()
-                    .AllowAnyHeader()
-                    .AllowAnyOrigin());
+                        .AllowAnyHeader()
+                        .AllowAnyOrigin());
+
+                options.AddPolicy("AngularClient",
+                     b => b.WithOrigins("https://localhost:4200") // Assuming Angular runs on localhost:4200
+                        .AllowAnyMethod()
+                        .AllowAnyHeader());
             });
 
-            builder.Services.AddCors(options => {
-                options.AddPolicy("AngularClient",
-                    b => b.WithOrigins("http://localhost:4200") // Assuming Angular runs on localhost:4200
-                          .AllowAnyMethod()
-                          .AllowAnyHeader());
-            });
+            //builder.Services.AddCors(options => {
+            //    options.AddPolicy("AngularClient",
+            //        b => b.WithOrigins("https://localhost:4200") // Assuming Angular runs on localhost:4200
+            //              .AllowAnyMethod()
+            //              .AllowAnyHeader());
+            //});
 
             var app = builder.Build();
 
@@ -116,6 +125,13 @@ namespace FinalProjectAPIBackend
             }
 
             app.UseHttpsRedirection();
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "Uploads")),
+                RequestPath = "/Uploads"
+            });
+            app.UseRouting();
+
             app.UseCors("AllowAll");
 
             app.UseAuthorization();

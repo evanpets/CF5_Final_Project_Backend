@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FinalProjectAPIBackend.Migrations
 {
     [DbContext(typeof(FinalProjectAPIBackendDbContext))]
-    [Migration("20240608234458_InitialCreate")]
+    [Migration("20240624192532_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -64,11 +64,17 @@ namespace FinalProjectAPIBackend.Migrations
                         .HasColumnType("nvarchar(250)")
                         .HasColumnName("DESCRIPTION");
 
+                    b.Property<string>("ImageUrl")
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)")
+                        .HasColumnName("IMAGE_URL");
+
                     b.Property<decimal?>("Price")
                         .HasColumnType("decimal(18,2)")
                         .HasColumnName("PRICE");
 
                     b.Property<string>("Title")
+                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)")
                         .HasColumnName("TITLE");
@@ -88,6 +94,25 @@ namespace FinalProjectAPIBackend.Migrations
                     b.ToTable("EVENTS", (string)null);
                 });
 
+            modelBuilder.Entity("FinalProjectAPIBackend.Data.EventSave", b =>
+                {
+                    b.Property<int?>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("EventId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SaveId")
+                        .HasColumnType("int");
+
+                    b.HasKey("UserId", "EventId")
+                        .HasName("SAVE_ID");
+
+                    b.HasIndex("EventId");
+
+                    b.ToTable("EVENT_SAVES", (string)null);
+                });
+
             modelBuilder.Entity("FinalProjectAPIBackend.Data.Performer", b =>
                 {
                     b.Property<int>("PerformerId")
@@ -98,6 +123,7 @@ namespace FinalProjectAPIBackend.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PerformerId"));
 
                     b.Property<string>("Name")
+                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)")
                         .HasColumnName("NAME");
@@ -119,6 +145,7 @@ namespace FinalProjectAPIBackend.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("UserId"));
 
                     b.Property<string>("Email")
+                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)")
                         .HasColumnName("EMAIL");
@@ -134,6 +161,7 @@ namespace FinalProjectAPIBackend.Migrations
                         .HasColumnName("LAST_NAME");
 
                     b.Property<string>("Password")
+                        .IsRequired()
                         .HasMaxLength(512)
                         .HasColumnType("nvarchar(512)")
                         .HasColumnName("PASSWORD");
@@ -150,6 +178,7 @@ namespace FinalProjectAPIBackend.Migrations
                         .HasColumnName("USER_ROLE");
 
                     b.Property<string>("Username")
+                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)")
                         .HasColumnName("USERNAME");
@@ -157,12 +186,10 @@ namespace FinalProjectAPIBackend.Migrations
                     b.HasKey("UserId");
 
                     b.HasIndex(new[] { "Email" }, "UQ_EMAIL")
-                        .IsUnique()
-                        .HasFilter("[EMAIL] IS NOT NULL");
+                        .IsUnique();
 
                     b.HasIndex(new[] { "Username" }, "UQ_USERNAME")
-                        .IsUnique()
-                        .HasFilter("[USERNAME] IS NOT NULL");
+                        .IsUnique();
 
                     b.ToTable("USERS", (string)null);
                 });
@@ -177,6 +204,7 @@ namespace FinalProjectAPIBackend.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("VenueId"));
 
                     b.Property<string>("Name")
+                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)")
                         .HasColumnName("NAME");
@@ -245,7 +273,7 @@ namespace FinalProjectAPIBackend.Migrations
                     b.HasOne("FinalProjectAPIBackend.Data.User", "User")
                         .WithMany("Events")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("FinalProjectAPIBackend.Data.Venue", "Venue")
@@ -257,6 +285,25 @@ namespace FinalProjectAPIBackend.Migrations
                     b.Navigation("User");
 
                     b.Navigation("Venue");
+                });
+
+            modelBuilder.Entity("FinalProjectAPIBackend.Data.EventSave", b =>
+                {
+                    b.HasOne("FinalProjectAPIBackend.Data.Event", "Event")
+                        .WithMany("EventSaves")
+                        .HasForeignKey("EventId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FinalProjectAPIBackend.Data.User", "User")
+                        .WithMany("EventSaves")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Event");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("FinalProjectAPIBackend.Data.Venue", b =>
@@ -271,8 +318,15 @@ namespace FinalProjectAPIBackend.Migrations
                     b.Navigation("VenueAddress");
                 });
 
+            modelBuilder.Entity("FinalProjectAPIBackend.Data.Event", b =>
+                {
+                    b.Navigation("EventSaves");
+                });
+
             modelBuilder.Entity("FinalProjectAPIBackend.Data.User", b =>
                 {
+                    b.Navigation("EventSaves");
+
                     b.Navigation("Events");
                 });
 
