@@ -107,8 +107,6 @@ namespace FinalProjectAPIBackend.Controllers
                 Token = userToken
             };
 
-            Console.WriteLine("token " + token);
-            //Console.WriteLine($"AppUser:{AppUser.Id}, {AppUser.Username}, {AppUser.Email}");
             return Ok(token);
         }
 
@@ -186,8 +184,6 @@ namespace FinalProjectAPIBackend.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Problem in finding email");
-                Console.WriteLine(ex);
                 return BadRequest(new { msg = ex.Message });
             }
         }
@@ -211,8 +207,6 @@ namespace FinalProjectAPIBackend.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Problem in finding username");
-                Console.WriteLine(ex);
                 return BadRequest(new { msg = ex.Message });
             }
         }
@@ -234,13 +228,12 @@ namespace FinalProjectAPIBackend.Controllers
             }
 
             var user = await _applicationService.UserService.UpdateUserAsync(userId, patchDTO);
-            Console.WriteLine("Updated user in patch" + user);
             if (user is null)
             {
                 return BadRequest(new { msg = "User update failed" });
             }
             var userDTO = _mapper.Map<UserReadOnlyDTO>(user);
-            Console.WriteLine("User dto in controller: " + userDTO);
+
             return Ok(new { msg = "User updated successfully", user = userDTO });
         }
     }

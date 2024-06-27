@@ -104,12 +104,6 @@ namespace FinalProjectAPIBackend.Controllers
         [HttpPost("save")]
         public async Task<IActionResult> SaveEvent([FromBody] EventSaveDTO saveDto)
         {
-            Console.WriteLine("Count: " + User.Claims.Count()); // Log the number of claims
-            foreach (var claim in User.Claims)
-            {
-                Console.WriteLine($"Claim Type: {claim.Type}, Claim Value: {claim.Value}");
-            }
-
             var userId = AppUser!.Id;
             var success = await _applicationService.EventService.SaveEventAsync(userId, saveDto.EventId);
             if (success)
@@ -127,11 +121,6 @@ namespace FinalProjectAPIBackend.Controllers
         [HttpPost("unsave")]
         public async Task<IActionResult> UnsaveEvent([FromBody] EventSaveDTO saveDto)
         {
-            Console.WriteLine("Count: " + User.Claims.Count()); // Log the number of claims
-            foreach (var claim in User.Claims)
-            {
-                Console.WriteLine($"Claim Type: {claim.Type}, Claim Value: {claim.Value}");
-            }
             var userId = AppUser!.Id;
             var success = await _applicationService.EventService.UnsaveEventAsync(userId, saveDto.EventId);
             if (success)
@@ -289,9 +278,8 @@ namespace FinalProjectAPIBackend.Controllers
         [HttpGet("venues")]
         public async Task<ActionResult<VenueReadOnlyDTO>> GetVenueByName([FromQuery] string name)
         {
-            Console.WriteLine("At controller" + name);
             var existingVenue = await _applicationService.VenueService.FindVenueByNameAsync(name);
-            Console.WriteLine(existingVenue);
+
             if (existingVenue is null)
             {
                 throw new EventNotFoundException("Event not found");
@@ -358,8 +346,6 @@ namespace FinalProjectAPIBackend.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Problem in checking venue");
-                Console.WriteLine(ex);
                 return BadRequest(new { msg = ex.Message });
             }
         }

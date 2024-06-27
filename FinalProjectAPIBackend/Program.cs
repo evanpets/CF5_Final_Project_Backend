@@ -43,7 +43,6 @@ namespace FinalProjectAPIBackend
             })
             .CreateMapper());
 
-            //var key = Encoding.ASCII.GetBytes(builder.Configuration["Authentication:SecretKey"]!);
             var key = Encoding.UTF8.GetBytes(builder.Configuration["Authentication:SecretKey"]!);
 
             builder.Services.AddAuthentication(options =>

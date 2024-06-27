@@ -38,7 +38,7 @@ namespace FinalProjectAPIBackend.Configuration
                     .ForMember(dest => dest.VenueStreetNumber, opt => opt.MapFrom(src => src.Venue!.VenueAddress!.StreetNumber))
                     .ForMember(dest => dest.VenueZipCode, opt => opt.MapFrom(src => src.Venue!.VenueAddress!.ZipCode))
                     .ForMember(dest => dest.VenueCity, opt => opt.MapFrom(src => src.Venue!.VenueAddress!.City))
-                    .ForMember(dest => dest.Performers, opt => opt.MapFrom(src => src.Performers!.Select(p => new PerformerReadOnlyDTO { Name = p.Name }))) //PerformerId = p.PerformerId, 
+                    .ForMember(dest => dest.Performers, opt => opt.MapFrom(src => src.Performers!.Select(p => new PerformerReadOnlyDTO { Name = p.Name }))) 
                     .ReverseMap();
 
             CreateMap<Performer, PerformerInsertDTO>().ReverseMap();

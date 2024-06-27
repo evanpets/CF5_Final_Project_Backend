@@ -195,9 +195,6 @@ namespace FinalProjectAPIBackend.Services
             var securityKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(appSecurityKey!));
             var signingCredentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
-            Console.WriteLine($"Security key: {securityKey}");
-            Console.WriteLine($"Signing credentials: {signingCredentials}");
-
             var claimsInfo = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, username!),
@@ -210,10 +207,8 @@ namespace FinalProjectAPIBackend.Services
             var audience = "https://localhost:4200";
 
             var jwtSecurityToken = new JwtSecurityToken(issuer, audience, claimsInfo, DateTime.UtcNow, DateTime.UtcNow.AddHours(3), signingCredentials);
-            Console.WriteLine("Security token " + jwtSecurityToken.ToString());
 
             var userToken = new JwtSecurityTokenHandler().WriteToken(jwtSecurityToken);
-            Console.WriteLine("user token " + userToken + "\nend user token");
 
             return userToken;
         }

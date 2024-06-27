@@ -11,7 +11,6 @@ namespace FinalProjectAPIBackend.DTO.Venue
         [Required(ErrorMessage = "Venue must be included.")]
         public string? Name { get; set; }
 
-        //[Required(ErrorMessage = "Venue address must be included.")]
         public VenueAddressUpdateDTO? VenueAddress { get; set; }
     }
 }

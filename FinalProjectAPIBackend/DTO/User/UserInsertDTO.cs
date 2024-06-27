@@ -29,6 +29,5 @@ namespace FinalProjectAPIBackend.DTO.User
         [Phone(ErrorMessage = "Invalid phone number.")]
         public string? PhoneNumber { get; set; }
 
-        //public UserRole? UserRole { get; set; }
     }
 }

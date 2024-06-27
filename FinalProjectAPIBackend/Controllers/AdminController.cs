@@ -38,13 +38,12 @@ namespace FinalProjectAPIBackend.Controllers
         public async Task<ActionResult<UserReadOnlyDTO>> AdminUpdateUser(int userId, UserUpdateDTO patchDTO)
         {
             var user = await _applicationService.UserService.UpdateUserAsync(userId, patchDTO);
-            Console.WriteLine("Updated user in patch" + user);
+
             if (user is null)
             {
                 return BadRequest(new { msg = "User update failed" });
             }
             var userDTO = _mapper.Map<UserReadOnlyDTO>(user);
-            Console.WriteLine("User dto in controller: " + userDTO);
             return Ok(new { msg = "User updated successfully", user = userDTO });
         }
 
@@ -100,8 +99,6 @@ namespace FinalProjectAPIBackend.Controllers
             }
 
             var newVenueReadOnlyDTO = _mapper.Map<VenueReadOnlyDTO>(createdVenue);
-            Console.WriteLine("New Venue:" + _applicationService.VenueService.FindVenueByIdAsync(newVenueReadOnlyDTO.VenueId) + "Read DTO:" + newVenueReadOnlyDTO.ToString());
-            //return Created($"api/events/venues/{newVenueReadOnlyDTO.VenueId}", newVenueReadOnlyDTO);
 
             return Created("api/events/venues/" + newVenueReadOnlyDTO.VenueId, newVenueReadOnlyDTO);
         }

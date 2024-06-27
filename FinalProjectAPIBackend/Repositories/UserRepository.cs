@@ -27,10 +27,7 @@ namespace FinalProjectAPIBackend.Repositories
         public async Task<List<User?>> GetAllUsersAsync()
         {
             var users = await _context.Users.ToListAsync();
-            //if (users.Count == 0)
-            //{
-            //    return new List<User?>();
-            //}
+
             return users!;
         }
 

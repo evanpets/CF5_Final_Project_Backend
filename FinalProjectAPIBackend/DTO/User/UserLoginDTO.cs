@@ -13,6 +13,5 @@ namespace FinalProjectAPIBackend.DTO.User
             "one lowercase letter, one digit, and one special character.")]
         public string? Password { get; set; }
 
-        //public bool KeepLoggedIn { get; set; }
     }
 }

@@ -5,7 +5,6 @@ using System.Security.Claims;
 
 namespace FinalProjectAPIBackend.Controllers
 {
-    //[Route("api/[controller]")]
     [ApiController]
     public class BaseController : ControllerBase
     {
@@ -14,7 +13,6 @@ namespace FinalProjectAPIBackend.Controllers
         public BaseController(IApplicationService applicationService)
         {
             this._applicationService = applicationService;
-            //_appUser = new ApplicationUser();
         }
 
         private ApplicationUser? _appUser;
@@ -41,8 +39,6 @@ namespace FinalProjectAPIBackend.Controllers
                     _appUser.Username = userClaimsName;
                     _appUser.Email = User.FindFirst(ClaimTypes.Email)?.Value;
 
-                    //Console.WriteLine("In base controller: userClaimsId: " + userClaimsId + " userClaimsName:" + userClaimsName +
-                    //    "_appUser.Username: " + _appUser.Username + "_appUser.Email: " + _appUser.Email);
                     return _appUser;
                 }
                 return null;

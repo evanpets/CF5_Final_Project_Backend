@@ -25,7 +25,6 @@ namespace FinalProjectAPIBackend.DTO.Event
         public string? VenueCity { get; set; }
         public decimal? Price { get; set; }
         public ICollection<PerformerUpdateDTO>? Performers { get; set; }
-        //public ICollection<int>? PerformerIds { get; set; }
         [Required(ErrorMessage = "An event category must be selected.")]
         public EventCategory? Category { get; set; }
         public int? UserId { get; set; }

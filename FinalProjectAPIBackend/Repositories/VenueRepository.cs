@@ -26,14 +26,10 @@ namespace FinalProjectAPIBackend.Repositories
 
         public async Task<List<Venue>> GetAllVenuesAsync()
         {
-            //var venues = await _context.Venues.Include(v=> v.VenueAddress).Include(v=> v.Events!).ThenInclude(e=>e.Performers).ToListAsync();
             var venues = await _context.Venues.Include(v => v.VenueAddress).ToListAsync();
 
             if (venues is null) return new List<Venue>();
-            //foreach (var venue in venues)
-            //{
-            //    Console.WriteLine(venue.Name);
-            //}
+
             return venues!;
         }
 
