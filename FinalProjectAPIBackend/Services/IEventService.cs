@@ -11,7 +11,7 @@ namespace FinalProjectAPIBackend.Services
         /// <summary>
         /// Creates a new event.
         /// </summary>
-        /// <param name="insertDTO">The event information to create.</param>
+        /// <param name="insertDTO">The event to create.</param>
         /// <returns>The created event, or null if the operation failed.</returns>
         Task<Event?> CreateEventAsync(EventInsertDTO insertDTO);
 
@@ -89,6 +89,13 @@ namespace FinalProjectAPIBackend.Services
         /// </summary>
         /// <returns>A list of dates with events.</returns>
         Task<List<DateOnly?>> FindAllDatesWithEventsAsync();
+
+        /// <summary>
+        /// Finds all events listed under a specified category.
+        /// </summary>
+        /// <param name="category">The event category to filter by.</param>
+        /// <returns>The list of events with that event category.</returns>
+        Task<List<Event>> FindAllUpcomingEventsInCategoryAsync(string category);
 
         /// <summary>
         /// Checks if an event is saved by a user.

@@ -14,6 +14,8 @@ using Microsoft.OpenApi.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Serilog;
+using System.Security.Claims;
+using System.Text;
 
 namespace FinalProjectAPIBackend
 {
@@ -41,29 +43,40 @@ namespace FinalProjectAPIBackend
             })
             .CreateMapper());
 
+            //var key = Encoding.ASCII.GetBytes(builder.Configuration["Authentication:SecretKey"]!);
+            var key = Encoding.UTF8.GetBytes(builder.Configuration["Authentication:SecretKey"]!);
+
             builder.Services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                 options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
             }).AddJwtBearer(options =>
             {
+                options.RequireHttpsMetadata = false;
                 options.IncludeErrorDetails = true;
                 options.SaveToken = true;
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
-                    ValidateIssuerSigningKey = false,
-                    ValidateIssuer = false,
-                    ValidateAudience = false,
-                    RequireExpirationTime = false,
-                    ValidateLifetime = false,
+
+                    ValidateIssuer = true,
+                    ValidIssuer = "https://localhost:5001",
+
+                    ValidateAudience = true,
+                    ValidAudience = "https://localhost:4200",
+
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(key),
+
+                    RequireExpirationTime = true,
+                    ValidateLifetime = true,
+                    ClockSkew = TimeSpan.Zero,
+
                     // return new JsonWebToken(token); in .NET 8
-                    // Override the default token signature validation an do NOT validtte the signature
+                    // Override the default token signature validation an do NOT validate the signature
                     // Just return the token
-                    SignatureValidator = (token, validator) => { return new JsonWebToken(token); }
+                    //SignatureValidator = (token, validator) => { return new JsonWebToken(token); }
                 };
             });
-
-            // Add services to the container.
 
             builder.Services.AddControllers()
                 .AddNewtonsoftJson(options =>
@@ -101,19 +114,14 @@ namespace FinalProjectAPIBackend
                     b => b.AllowAnyMethod()
                         .AllowAnyHeader()
                         .AllowAnyOrigin());
+            });
 
+            builder.Services.AddCors(options => {
                 options.AddPolicy("AngularClient",
                      b => b.WithOrigins("https://localhost:4200") // Assuming Angular runs on localhost:4200
                         .AllowAnyMethod()
                         .AllowAnyHeader());
             });
-
-            //builder.Services.AddCors(options => {
-            //    options.AddPolicy("AngularClient",
-            //        b => b.WithOrigins("https://localhost:4200") // Assuming Angular runs on localhost:4200
-            //              .AllowAnyMethod()
-            //              .AllowAnyHeader());
-            //});
 
             var app = builder.Build();
 
@@ -133,6 +141,8 @@ namespace FinalProjectAPIBackend
             app.UseRouting();
 
             app.UseCors("AllowAll");
+
+            app.UseAuthentication();
 
             app.UseAuthorization();
 

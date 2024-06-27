@@ -4,8 +4,10 @@ using FinalProjectAPIBackend.DTO;
 using FinalProjectAPIBackend.DTO.User;
 using FinalProjectAPIBackend.Services;
 using FinalProjectAPIBackend.Services.Exceptions;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace FinalProjectAPIBackend.Controllers
 {
@@ -87,11 +89,13 @@ namespace FinalProjectAPIBackend.Controllers
         [HttpPost]
         public async Task<ActionResult<JwtTokenDTO>> LoginUserAsync(UserLoginDTO credentials)
         {
+
             var user = await _applicationService.UserService.VerifyAndGetUserAsync(credentials);
 
             if (user == null)
             {
-                throw new UnauthorizedAccessException("Bad Credentials");
+                return BadRequest("Bad Credentials");
+                //throw new UnauthorizedAccessException("Bad Credentials");
             }
 
             var userToken =
@@ -102,6 +106,9 @@ namespace FinalProjectAPIBackend.Controllers
             {
                 Token = userToken
             };
+
+            Console.WriteLine("token " + token);
+            //Console.WriteLine($"AppUser:{AppUser.Id}, {AppUser.Username}, {AppUser.Email}");
             return Ok(token);
         }
 

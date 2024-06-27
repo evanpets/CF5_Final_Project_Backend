@@ -1,4 +1,5 @@
 ﻿using FinalProjectAPIBackend.Data;
+using FinalProjectAPIBackend.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace FinalProjectAPIBackend.Repositories
@@ -96,6 +97,17 @@ namespace FinalProjectAPIBackend.Repositories
         {
             return await _context.Events.Include(e => e.EventSaves).Include(e => e.User).Where(e => e.EventSaves!.Any(l => l.UserId == userId)).ToListAsync(); 
         }
+
+        public async Task<List<Event>> GetAllUpcomingEventsInCategoryAsync(string category)
+        {
+            if (!Enum.TryParse<EventCategory>(category, true, out var eventCategory))
+            {
+                throw new ArgumentException($"Invalid category: {category}");
+            }
+            return await _context.Events.Include(e => e.Performers).Include(e => e.Venue).ThenInclude(v => v!.VenueAddress)
+                .Where(e => e.Category == eventCategory).Where(e => e.Date >= DateOnly.FromDateTime(DateTime.UtcNow.Date)).OrderBy(e => e.Date).ToListAsync();
+        }
+
         public async Task<bool> IsEventSavedAsync(int userId, int eventId)
         {
             return await _context.EventSaves.AnyAsync(l => l.UserId == userId && l.EventId == eventId);

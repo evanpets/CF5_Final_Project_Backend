@@ -9,79 +9,79 @@ namespace FinalProjectAPIBackend.Repositories
     public interface IEventRepository
     {
         /// <summary>
-        /// Gets an event by ID.
+        /// Retrieves an event by ID.
         /// </summary>
         /// <param name="eventId">The ID of the event to get.</param>
         /// <returns>The event if found, otherwise null.</returns>
         Task<Event?> GetEventAsync(int eventId);
 
         /// <summary>
-        /// Gets all events.
+        /// Retrieves all events.
         /// </summary>
         /// <returns>A list of all events.</returns>
         Task<List<Event>> GetAllEventsAsync();
 
         /// <summary>
-        /// Gets all upcoming events.
+        /// Retrieves all upcoming events.
         /// </summary>
         /// <returns>A list of upcoming events.</returns>
         Task<List<Event>> GetAllUpcomingEventsAsync();
 
         /// <summary>
-        /// Gets all past events.
+        /// Retrieves all past events.
         /// </summary>
         /// <returns>A list of past events.</returns>
         Task<List<Event>> GetAllPastEventsAsync();
 
         /// <summary>
-        /// Gets events by title.
+        /// Retrieves events with a specified title string.
         /// </summary>
         /// <param name="title">The title to search for.</param>
         /// <returns>A list of events with the given title.</returns>
         Task<List<Event>> GetAllEventsWithTitleAsync(string title);
 
         /// <summary>
-        /// Gets events on a specific date.
+        /// Retrieves events on a specific date.
         /// </summary>
         /// <param name="date">The date to search for.</param>
         /// <returns>A list of events on the given date.</returns>
         Task<List<Event>> GetAllEventsOnDateAsync(DateOnly date);
 
         /// <summary>
-        /// Gets events by user ID.
+        /// Retrieves events by user ID.
         /// </summary>
         /// <param name="userId">The user ID to search for.</param>
         /// <returns>A list of events belonging to the given user.</returns>
         Task<List<Event>> GetEventsByUserIdAsync(int userId);
 
         /// <summary>
-        /// Gets events by category.
+        /// Retrieves events by category.
         /// </summary>
         /// <param name="category">The category to search for.</param>
         /// <returns>A list of events in the given category.</returns>
         Task<List<Event>> GetEventsByCategoryAsync(string category);
 
         /// <summary>
-        /// Gets events at a specific venue.
+        /// Retrieves events at a specific venue.
         /// </summary>
         /// <param name="venue">The venue to search for.</param>
         /// <returns>A list of events at the given venue.</returns>
         Task<List<Event>> GetAllEventsAtVenueAsync(string venue);
         /// <summary>
-        /// Gets events by performer.
+        /// Retrieves events by performer.
         /// </summary>
         /// <param name="performer">The performer to search for.</param>
         /// <returns>A list of events featuring the given performer.</returns>
         Task<List<Event>> GetAllEventsWithPerformerAsync(string performer);
 
         /// <summary>
-        /// Gets all dates with events.
+        /// Retrieves all dates with events.
         /// </summary>
         /// <returns>A list of dates with events.</returns>
         Task<List<DateOnly?>> GetAllDatesWithEventsAsync();
 
         /// <summary>
-        /// Gets saved events by user ID.
+        /// Retrieves saved events by user ID.
         /// </summary>
         /// <param name="userId">The user ID to search for.</param>
         /// <returns>A list of saved events belonging to the given user.</returns>
@@ -103,7 +103,7 @@ namespace FinalProjectAPIBackend.Repositories
         Task<Event?> UpdateEventAsync(Event updatedEvent);
 
         /// <summary>
-        /// Gets all events filtered by specified criteria.
+        /// Retrieves all events filtered by specified criteria.
         /// </summary>
         /// <param name="pageNumber">The page number of the results.</param>
         /// <param name="pageSize">The number of results per page.</param>
@@ -112,7 +112,14 @@ namespace FinalProjectAPIBackend.Repositories
         Task<List<Event>> GetAllEventsFilteredAsync(int pageNumber, int pageSize, List<Func<Event, bool>> filters);
 
         /// <summary>
-        /// Fetches an saved event for a user.
+        /// Retrieves all events listed under a specified category.
+        /// </summary>
+        /// <param name="category">The event category to filter by.</param>
+        /// <returns>The list of events with that event category.</returns>
+        Task<List<Event>> GetAllUpcomingEventsInCategoryAsync(string category);
+
+        /// <summary>
+        /// Retrieves an saved event for a user.
         /// </summary>
         /// <param name="userId">The ID of the user.</param>
         /// <param name="eventId">The ID of the event.</param>
@@ -126,13 +133,13 @@ namespace FinalProjectAPIBackend.Repositories
         Task AddSaveAsync(EventSave save);
 
         /// <summary>
-        /// Removes a save.
+        /// Removes the saved status from an event for a user.
         /// </summary>
         /// <param name="save">The save to remove.</param>
         void RemoveSave(EventSave save);
 
         /// <summary>
-        /// Gets all saved events for a specific user.
+        /// Retrieves all saved events for a specific user.
         /// </summary>
         /// <param name="userId">The ID of the user to retrieve saved events for.</param>
         /// <returns>A list of saved events for the specified user.</returns>

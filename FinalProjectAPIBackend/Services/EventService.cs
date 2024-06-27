@@ -110,6 +110,7 @@ namespace FinalProjectAPIBackend.Services
         {
             return await _unitOfWork.EventRepository.IsEventSavedAsync(userId, eventId);
         }
+
         public async Task<List<Event>> GetAllEventsFilteredAsync(int pageNumber, int pageSize, EventFiltersDTO eventFiltersDTO)
         {
             List<Event> events = new();
@@ -154,6 +155,7 @@ namespace FinalProjectAPIBackend.Services
         {
             return await _unitOfWork.EventRepository.GetAllEventsOnDateAsync(date);
         }
+
         public async Task<List<DateOnly?>> FindAllDatesWithEventsAsync()
         {
             return await _unitOfWork.EventRepository.GetAllDatesWithEventsAsync();
@@ -162,6 +164,11 @@ namespace FinalProjectAPIBackend.Services
         public async Task<List<Event>> FindAllSavedEventsAsync(int userId)
         {
             return await _unitOfWork.EventRepository.GetAllSavedEventsAsync(userId);
+        }
+
+        public async Task<List<Event>> FindAllUpcomingEventsInCategoryAsync(string category)
+        {
+            return await _unitOfWork.EventRepository.GetAllUpcomingEventsInCategoryAsync(category);
         }
 
         public async Task<Event?> UpdateEventAsync(int eventId, EventUpdateDTO updateDTO, IFormFile? eventImage)

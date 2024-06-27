@@ -10,7 +10,7 @@ namespace FinalProjectAPIBackend.DTO.Event
         [Editable(false)]
         public int EventId { get; set; }
 
-        [StringLength(50, MinimumLength = 5, ErrorMessage = "Event title should consist of at least 5 characters.")]
+        [StringLength(100, MinimumLength = 5, ErrorMessage = "Event title should consist of at least 5 characters.")]
         [Required(ErrorMessage = "The event title is a required field.")]
         public string? Title { get; set; }
 

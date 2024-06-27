@@ -60,8 +60,10 @@ namespace FinalProjectAPIBackend.Services
             try
             {
                 user = await _unitOfWork!.UserRepository.GetUserAsync(credentials.Username!, credentials.Password!);
-                _logger!.LogInformation("{Message}", "User: " + user!.Username + " retrieved successfully.");
-
+                if (user != null)
+                {
+                    _logger!.LogInformation("{Message}", "User: " + user!.Username + " retrieved successfully.");
+                }
             }
             catch (UserNotFoundException)
             {
@@ -189,8 +191,12 @@ namespace FinalProjectAPIBackend.Services
 
         public string CreateUserToken(int userId, string? username, string? email, UserRole? role, string? appSecurityKey)
         {
+
             var securityKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(appSecurityKey!));
             var signingCredentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+
+            Console.WriteLine($"Security key: {securityKey}");
+            Console.WriteLine($"Signing credentials: {signingCredentials}");
 
             var claimsInfo = new List<Claim>
             {
@@ -204,8 +210,10 @@ namespace FinalProjectAPIBackend.Services
             var audience = "https://localhost:4200";
 
             var jwtSecurityToken = new JwtSecurityToken(issuer, audience, claimsInfo, DateTime.UtcNow, DateTime.UtcNow.AddHours(3), signingCredentials);
-            
+            Console.WriteLine("Security token " + jwtSecurityToken.ToString());
+
             var userToken = new JwtSecurityTokenHandler().WriteToken(jwtSecurityToken);
+            Console.WriteLine("user token " + userToken + "\nend user token");
 
             return userToken;
         }

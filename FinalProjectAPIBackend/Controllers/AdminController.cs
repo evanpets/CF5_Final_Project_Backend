@@ -92,11 +92,6 @@ namespace FinalProjectAPIBackend.Controllers
                 throw new ServerGenericException("Application Service Null");
             }
 
-            if (_applicationService.VenueService.FindVenueByNameAsync(insertDTO.Name!) != null)
-            {
-                throw new VenueAlreadyExistsException("A venue with that name already exists.");
-            }
-
             Venue? createdVenue = await _applicationService.VenueService.AddVenueAsync(insertDTO);
 
             if (createdVenue is null)
@@ -106,7 +101,9 @@ namespace FinalProjectAPIBackend.Controllers
 
             var newVenueReadOnlyDTO = _mapper.Map<VenueReadOnlyDTO>(createdVenue);
             Console.WriteLine("New Venue:" + _applicationService.VenueService.FindVenueByIdAsync(newVenueReadOnlyDTO.VenueId) + "Read DTO:" + newVenueReadOnlyDTO.ToString());
-            return Created("api/events/venues" + newVenueReadOnlyDTO.VenueId, newVenueReadOnlyDTO);
+            //return Created($"api/events/venues/{newVenueReadOnlyDTO.VenueId}", newVenueReadOnlyDTO);
+
+            return Created("api/events/venues/" + newVenueReadOnlyDTO.VenueId, newVenueReadOnlyDTO);
         }
 
         /// <summary>

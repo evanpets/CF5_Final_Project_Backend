@@ -9,6 +9,7 @@ using FinalProjectAPIBackend.Services.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
+using System.Security.Claims;
 
 namespace FinalProjectAPIBackend.Controllers
 {
@@ -96,10 +97,103 @@ namespace FinalProjectAPIBackend.Controllers
         }
 
         /// <summary>
+        /// Marks an event as saved (bookmarked).
+        /// </summary>
+        /// <param name="saveDto">The DTO containing the user and event the save is linked to.</param>
+        /// <returns>A confirmation code for the save.</returns>
+        [HttpPost("save")]
+        public async Task<IActionResult> SaveEvent([FromBody] EventSaveDTO saveDto)
+        {
+            Console.WriteLine("Count: " + User.Claims.Count()); // Log the number of claims
+            foreach (var claim in User.Claims)
+            {
+                Console.WriteLine($"Claim Type: {claim.Type}, Claim Value: {claim.Value}");
+            }
+
+            var userId = AppUser!.Id;
+            var success = await _applicationService.EventService.SaveEventAsync(userId, saveDto.EventId);
+            if (success)
+            {
+                return Ok(new { message = "Event saved successfully" });
+            }
+            return BadRequest(new { message = "Failed to save event" });
+        }
+
+        /// <summary>
+        /// Marks an event as unsaved (bookmarked).
+        /// </summary>
+        /// <param name="saveDto">The DTO containing the user and event the save is linked to.</param>
+        /// <returns>A confirmation code for the removal of the save status.</returns>
+        [HttpPost("unsave")]
+        public async Task<IActionResult> UnsaveEvent([FromBody] EventSaveDTO saveDto)
+        {
+            Console.WriteLine("Count: " + User.Claims.Count()); // Log the number of claims
+            foreach (var claim in User.Claims)
+            {
+                Console.WriteLine($"Claim Type: {claim.Type}, Claim Value: {claim.Value}");
+            }
+            var userId = AppUser!.Id;
+            var success = await _applicationService.EventService.UnsaveEventAsync(userId, saveDto.EventId);
+            if (success)
+            {
+                return Ok(new { message = "Event unsaved successfully" });
+            }
+            return BadRequest(new { message = "Failed to unsave event" });
+        }
+
+
+
+        /// <summary>
+        /// Updates an event.
+        /// </summary>
+        /// <param name="eventId">The ID of the event to be updated.</param>
+        /// <param name="eventToUpdate">The new information for the event.</param>
+        /// <param name="eventImage">The image for the event.</param>
+        /// <returns>The updated event.</returns>
+        [HttpPatch("{eventId}")]
+        public async Task<ActionResult<EventReadOnlyDTO>> UpdateEvent(int eventId, [FromForm] string eventToUpdate, IFormFile? eventImage)
+        {
+            try
+            {
+                var updateDTO = JsonConvert.DeserializeObject<EventUpdateDTO>(eventToUpdate);
+                var updatedEvent = await _applicationService.EventService.UpdateEventAsync(eventId, updateDTO!, eventImage);
+
+                if (updatedEvent == null)
+                {
+                    return NotFound();
+                }
+
+                var returnedEventDTO = _mapper.Map<EventReadOnlyDTO>(updatedEvent);
+                return Ok(new { msg = "Event updated successfully", backendEvent = returnedEventDTO });
+            }
+            catch (ServerGenericException ex)
+            {
+                return StatusCode(500, new { error = "An error occurred while updating the event", message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Deletes an event.
+        /// </summary>
+        /// <param name="eventId">The ID of the event to be deleted.</param>
+        /// <returns>A code message confirming the delete.</returns>
+        [HttpDelete("{eventId}")]
+        public async Task<ActionResult> DeleteEvent(int eventId)
+        {
+            var deletedEvent = await _applicationService.EventService.DeleteEventAsync(eventId);
+            if (deletedEvent == null)
+            {
+                return NotFound(new { msg = "Event not found" });
+            }
+
+            return NoContent();
+        }
+
+        /// <summary>
         /// Fetches a list of all events.
         /// </summary>
         /// <returns>A list of all events.</returns>
-        /// <exception cref="EventNotFoundException">if no events are found.</exception>
+        /// <exception cref="EventNotFoundException">If no events are found.</exception>
         [HttpGet]
         public async Task<ActionResult<List<EventReadOnlyDTO>>> GetAllEvents()
         {
@@ -169,27 +263,6 @@ namespace FinalProjectAPIBackend.Controllers
         }
 
         /// <summary>
-        /// Fetches a list of all events whose title contains a user-given string.
-        /// </summary>
-        /// <param name="title">The string input by which the user is searching for an event.</param>
-        /// <returns>A list of all the events containing the string.</returns>
-        /// <exception cref="EventNotFoundException">If no events containing the string exist.</exception>
-        [HttpGet("by-title/{title}")]
-        public async Task<ActionResult<List<EventReadOnlyDTO>>> GetAllEventsWithTitle(string title)
-        {
-            var eventsWithTitle = await _applicationService.EventService.FindAllEventsWithTitleAsync(title);
-            if (eventsWithTitle.IsNullOrEmpty())
-            {
-                throw new EventNotFoundException("No events with title found");
-            }
-            var eventDTOs = new List<EventReadOnlyDTO>();
-            foreach(var eventEntity in eventsWithTitle)
-            {
-                eventDTOs.Add(_mapper.Map<EventReadOnlyDTO>(eventEntity));
-            }
-            return Ok(eventDTOs);
-        }
-        /// <summary>
         /// Fetches an venue by its ID.
         /// </summary>
         /// <param name="venueId">The ID of the venue.</param>
@@ -228,6 +301,28 @@ namespace FinalProjectAPIBackend.Controllers
         }
 
         /// <summary>
+        /// Fetches a list of all events whose title contains a user-given string.
+        /// </summary>
+        /// <param name="title">The string input by which the user is searching for an event.</param>
+        /// <returns>A list of all the events containing the string.</returns>
+        /// <exception cref="EventNotFoundException">If no events containing the string exist.</exception>
+        [HttpGet("by-title/{title}")]
+        public async Task<ActionResult<List<EventReadOnlyDTO>>> GetAllEventsWithTitle(string title)
+        {
+            var eventsWithTitle = await _applicationService.EventService.FindAllEventsWithTitleAsync(title);
+            if (eventsWithTitle.IsNullOrEmpty())
+            {
+                throw new EventNotFoundException("No events with title found");
+            }
+            var eventDTOs = new List<EventReadOnlyDTO>();
+            foreach (var eventEntity in eventsWithTitle)
+            {
+                eventDTOs.Add(_mapper.Map<EventReadOnlyDTO>(eventEntity));
+            }
+            return Ok(eventDTOs);
+        }
+
+        /// <summary>
         /// Fetches a list of all events submitted by a given user.
         /// </summary>
         /// <param name="userId">The ID of the given user.</param>
@@ -245,86 +340,6 @@ namespace FinalProjectAPIBackend.Controllers
         }
 
         /// <summary>
-        /// Updates an event.
-        /// </summary>
-        /// <param name="eventId">The ID of the event to be updated.</param>
-        /// <param name="updateInformation">The new information for the event.</param>
-        /// <param name="eventImage">The image for the event.</param>
-        /// <returns>The updated event.</returns>
-        [HttpPatch("{eventId}")]
-        public async Task<ActionResult<EventReadOnlyDTO>> UpdateEvent(int eventId, [FromForm] string updateInformation, IFormFile? eventImage)
-        {
-            try
-            {
-                var updateDTO = JsonConvert.DeserializeObject<EventUpdateDTO>(updateInformation);
-                var updatedEvent = await _applicationService.EventService.UpdateEventAsync(eventId, updateDTO!, eventImage);
-
-                if (updatedEvent == null)
-                {
-                    return NotFound();
-                }
-
-                var returnedEventDTO = _mapper.Map<EventReadOnlyDTO>(updatedEvent);
-                return Ok(new { msg = "Event updated successfully", backendEvent = returnedEventDTO });
-            }
-            catch (ServerGenericException ex)
-            {
-                return StatusCode(500, new { error = "An error occurred while updating the event", message = ex.Message });
-            }
-        }
-
-        /// <summary>
-        /// Deletes an event.
-        /// </summary>
-        /// <param name="eventId">The ID of the event to be deleted.</param>
-        /// <returns>A code message confirming the delete.</returns>
-        [HttpDelete("{eventId}")]
-        public async Task<ActionResult> DeleteEvent(int eventId)
-        {
-            var deletedEvent = await _applicationService.EventService.DeleteEventAsync(eventId);
-            if (deletedEvent == null)
-            {
-                return NotFound(new { msg = "Event not found" });
-            }
-
-            return NoContent();
-        }
-
-        /// <summary>
-        /// Marks an event as saved (bookmarked).
-        /// </summary>
-        /// <param name="saveDto">The DTO containing the user and event the save is linked to.</param>
-        /// <returns>A confirmation code for the save.</returns>
-        [HttpPost("save")]
-        public async Task<IActionResult> SaveEvent([FromBody] EventSaveDTO saveDto)
-        {
-            var userId = AppUser!.Id;
-            var success = await _applicationService.EventService.SaveEventAsync(userId, saveDto.EventId);
-            if (success)
-            {
-                return Ok(new { message = "Event saved successfully" });
-            }
-            return BadRequest(new { message = "Failed to save event" });
-        }
-
-        /// <summary>
-        /// Marks an event as unsaved (bookmarked).
-        /// </summary>
-        /// <param name="saveDto">The DTO containing the user and event the save is linked to.</param>
-        /// <returns>A confirmation code for the removal of the save status.</returns>
-        [HttpPost("unsave")]
-        public async Task<IActionResult> UnsaveEvent([FromBody] EventSaveDTO saveDto)
-        {
-            var userId = AppUser!.Id;
-            var success = await _applicationService.EventService.UnsaveEventAsync(userId, saveDto.EventId);
-            if (success)
-            {
-                return Ok(new { message = "Event unsaved successfully" });
-            }
-            return BadRequest(new { message = "Failed to unsave event" });
-        }
-
-        /// <summary>
         /// Fetches the name of the venue requested and validates it as unique for insertion or rejects it.
         /// </summary>
         /// <param name="venueName">The name for a venue.</param>
@@ -336,7 +351,7 @@ namespace FinalProjectAPIBackend.Controllers
             {
                 var existingVenue = await _applicationService.VenueService.FindVenueByNameAsync(venueName);
                 if (existingVenue is not null)
-                { 
+                {
                     return Ok(new { msg = "Venue name already in use" });
                 }
                 return Ok(new { msg = "Venue name not registered yet" });
@@ -357,7 +372,7 @@ namespace FinalProjectAPIBackend.Controllers
         [HttpGet("filter-events")]
         public async Task<ActionResult<List<Object>>> FilterEvents(string filter)
         {
-            switch (filter.ToLower()){
+            switch (filter.ToLower()) {
                 case "venue":
                     return Ok(await _applicationService.VenueService.FindAllVenuesAsync());
                 case "date":
@@ -369,6 +384,28 @@ namespace FinalProjectAPIBackend.Controllers
 
             }
         }
+        /// <summary>
+        /// Returns all events belonging to a specified category.
+        /// </summary>
+        /// <param name="category">The category by which to filter events.</param>
+        /// <returns>A list of events listed under that category.</returns>
+        [HttpGet("{category}")]
+        public async Task<ActionResult<List<Event>>> GetAllUpcomingEventsInCategory(string category)
+        {
+            if (category == null)
+            {
+                return BadRequest("String is null");
+            }
+            var eventsList = await _applicationService.EventService.FindAllEventsInCategoryAsync(category);
+
+            if (eventsList.IsNullOrEmpty())
+            {
+                return BadRequest("No events were found matching the requested category");
+            }
+
+            return Ok( new { msg = $"Events were found under the category: \"{category}\"", eventsList });
+        }
+
         /// <summary>
         /// Fetches all current or future events.
         /// </summary>
