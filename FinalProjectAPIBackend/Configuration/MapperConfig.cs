@@ -25,11 +25,19 @@ namespace FinalProjectAPIBackend.Configuration
                 .ForMember(dest => dest.VenueId, opt => opt.MapFrom(src => src.VenueId)).ReverseMap();
 
             CreateMap<Event, EventUpdateDTO>()
-                .ForMember(dest => dest.Performers, opt => opt.MapFrom(src => src.Performers!.Select(p => new PerformerUpdateDTO { Name = p.Name }))) 
-                .ForMember(dest => dest.VenueStreet, opt => opt.MapFrom(src => src.Venue!.VenueAddress!.Street))
-                .ForMember(dest => dest.VenueStreetNumber, opt => opt.MapFrom(src => src.Venue!.VenueAddress!.StreetNumber))
-                .ForMember(dest => dest.VenueZipCode, opt => opt.MapFrom(src => src.Venue!.VenueAddress!.ZipCode))
-                .ForMember(dest => dest.VenueCity, opt => opt.MapFrom(src => src.Venue!.VenueAddress!.City))
+                .ForMember(dest => dest.Performers, opt => opt.MapFrom(src => src.Performers!.Select(p => new PerformerUpdateDTO { Name = p.Name })))
+                .ForMember(dest => dest.Venue, opt => opt.MapFrom(src => src.Venue != null ? new VenueUpdateDTO
+                {
+                    VenueId = src.Venue.VenueId,
+                    Name = src.Venue.Name,
+                    VenueAddress = src.Venue.VenueAddress != null ? new VenueAddressUpdateDTO
+                    {
+                        Street = src.Venue.VenueAddress.Street,
+                        StreetNumber = src.Venue.VenueAddress.StreetNumber,
+                        ZipCode = src.Venue.VenueAddress.ZipCode,
+                        City = src.Venue.VenueAddress.City
+                    } : null
+                } : null))
                 .ReverseMap();
 
             CreateMap<Event, EventReadOnlyDTO>()

@@ -184,17 +184,23 @@ namespace FinalProjectAPIBackend.Services
                 existingEvent.Date = updateDTO.Date;
                 existingEvent.Category = updateDTO.Category;
                 existingEvent.Price = updateDTO.Price;
-                var venue = existingEvent.Venue;
-                if (venue != null)
+
+
+                if (updateDTO.Venue != null)
                 {
-                    venue.Name = updateDTO.VenueName;
-                    var venueAddress = venue.VenueAddress;
-                    if (venueAddress != null)
+                    var selectedVenue = await _unitOfWork.VenueRepository.GetVenueAsync(updateDTO.Venue.VenueId);
+                    if (selectedVenue != null)
                     {
-                        venueAddress.Street = updateDTO.VenueStreet;
-                        venueAddress.StreetNumber = updateDTO.VenueStreetNumber;
-                        venueAddress.ZipCode = updateDTO.VenueZipCode;
-                        venueAddress.City = updateDTO.VenueCity;
+                        existingEvent.VenueId = selectedVenue.VenueId;
+                        existingEvent.Venue = selectedVenue;
+
+                        if (selectedVenue.VenueAddress != null)
+                        {
+                            selectedVenue.VenueAddress.Street = updateDTO.Venue.VenueAddress!.Street;
+                            selectedVenue.VenueAddress.StreetNumber = updateDTO.Venue.VenueAddress.StreetNumber;
+                            selectedVenue.VenueAddress.ZipCode = updateDTO.Venue.VenueAddress.ZipCode;
+                            selectedVenue.VenueAddress.City = updateDTO.Venue.VenueAddress.City;
+                        }
                     }
                 }
 

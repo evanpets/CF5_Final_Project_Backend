@@ -145,7 +145,7 @@ namespace FinalProjectAPIBackend.Controllers
             try
             {
                 var updateDTO = JsonConvert.DeserializeObject<EventUpdateDTO>(eventToUpdate);
-                var updatedEvent = await _applicationService.EventService.UpdateEventAsync(eventId, updateDTO!, eventImage);
+                var updatedEvent = await _applicationService.EventService.UpdateEventAsync(eventId, updateDTO, eventImage);
 
                 if (updatedEvent == null)
                 {
@@ -153,7 +153,7 @@ namespace FinalProjectAPIBackend.Controllers
                 }
 
                 var returnedEventDTO = _mapper.Map<EventReadOnlyDTO>(updatedEvent);
-                return Ok(new { msg = "Event updated successfully", backendEvent = returnedEventDTO });
+                return Ok(new { msg = "Event updated successfully", updatedEvent = returnedEventDTO });
             }
             catch (ServerGenericException ex)
             {
@@ -382,7 +382,7 @@ namespace FinalProjectAPIBackend.Controllers
             {
                 return BadRequest("String is null");
             }
-            var eventsList = await _applicationService.EventService.FindAllEventsInCategoryAsync(category);
+            var eventsList = await _applicationService.EventService.FindAllUpcomingEventsInCategoryAsync(category);
 
             if (eventsList.IsNullOrEmpty())
             {
