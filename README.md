@@ -6,7 +6,8 @@ The server runs on `https://localhost:5001/`and `http://localhost:5000`. To run 
 press F5. On run, Swagger will also load.
 
 Two SQL scripts are included within the folder provided. One creates the database and user, and the other inserts data. After running the script to create the database,
-you will need to go to `View -> Other Windows -> Package Manager Console` and on the terminal that opens, run `Add-Migration <name of your choice>` and after the process is finished, run `Update-Database`.
+you will need to go to `View -> Other Windows -> Package Manager Console` and in the terminal that opens, run `Update-Database`.
+(A migration folder and file should already exist within the application. If not, in the Package Manager Console terminal, run `Add-Migration <name of your choice>` before you run `Update-Database`).
 This will create the tables of the database and will allow you to properly insert the values provided in the second script to the database.
 
 ## Brief description of the layout
