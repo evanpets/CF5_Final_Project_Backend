@@ -104,13 +104,22 @@ namespace FinalProjectAPIBackend.Controllers
         [HttpPost("save")]
         public async Task<IActionResult> SaveEvent([FromBody] EventSaveDTO saveDto)
         {
-            var userId = AppUser!.Id;
-            var success = await _applicationService.EventService.SaveEventAsync(userId, saveDto.EventId);
-            if (success)
+            try
             {
-                return Ok(new { message = "Event saved successfully" });
+                var userId = AppUser!.Id;
+                var success = await _applicationService.EventService.SaveEventAsync(userId, saveDto.EventId);
+                if (success)
+                {
+                    return Ok(new { message = "Event saved successfully" });
+                }
+                return BadRequest(new { message = "Failed to unsave event" });
             }
-            return BadRequest(new { message = "Failed to save event" });
+            catch (Exception) 
+            {
+                return BadRequest(new { message = "Failed to save event" });
+
+            }
+
         }
 
         /// <summary>
@@ -121,13 +130,21 @@ namespace FinalProjectAPIBackend.Controllers
         [HttpPost("unsave")]
         public async Task<IActionResult> UnsaveEvent([FromBody] EventSaveDTO saveDto)
         {
-            var userId = AppUser!.Id;
-            var success = await _applicationService.EventService.UnsaveEventAsync(userId, saveDto.EventId);
-            if (success)
+            try
             {
-                return Ok(new { message = "Event unsaved successfully" });
+                var userId = AppUser!.Id;
+                var success = await _applicationService.EventService.UnsaveEventAsync(userId, saveDto.EventId);
+                if (success)
+                {
+                    return Ok(new { message = "Event unsaved successfully" });
+                }
+                return BadRequest(new { message = "Failed to unsave event" });
+
             }
-            return BadRequest(new { message = "Failed to unsave event" });
+            catch (Exception) 
+            {
+                return BadRequest(new { message = "Failed to unsave event" });
+            }
         }
 
 
@@ -145,7 +162,7 @@ namespace FinalProjectAPIBackend.Controllers
             try
             {
                 var updateDTO = JsonConvert.DeserializeObject<EventUpdateDTO>(eventToUpdate);
-                var updatedEvent = await _applicationService.EventService.UpdateEventAsync(eventId, updateDTO, eventImage);
+                var updatedEvent = await _applicationService.EventService.UpdateEventAsync(eventId, updateDTO!, eventImage);
 
                 if (updatedEvent == null)
                 {

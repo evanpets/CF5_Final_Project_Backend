@@ -1,5 +1,6 @@
 
 using AutoMapper;
+using DotNetEnv;
 using FinalProjectAPIBackend.Configuration;
 using FinalProjectAPIBackend.Data;
 using FinalProjectAPIBackend.Helpers;
@@ -23,6 +24,8 @@ namespace FinalProjectAPIBackend
     {
         public static void Main(string[] args)
         {
+            Env.Load();
+
             var builder = WebApplication.CreateBuilder(args);
 
             builder.Host.UseSerilog((context, config) =>
@@ -30,9 +33,13 @@ namespace FinalProjectAPIBackend
                 config.ReadFrom.Configuration(context.Configuration);
             });
 
-            var connString = builder.Configuration.GetConnectionString("DefaultConnection");
+            //var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
-            builder.Services.AddDbContext<FinalProjectAPIBackendDbContext>(options => options.UseSqlServer(connString));
+            var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING") ??
+                throw new InvalidOperationException("DB_CONNECTION_STRING environment variable is not set.");
+
+
+            builder.Services.AddDbContext<FinalProjectAPIBackendDbContext>(options => options.UseSqlServer(connectionString));
             builder.Services.AddScoped<IApplicationService, ApplicationService>();
 
             builder.Services.AddRepositories();
