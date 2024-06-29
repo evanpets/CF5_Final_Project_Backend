@@ -9,6 +9,8 @@ Two SQL scripts are included within the folder provided. One creates the databas
 you will need to go to `View -> Other Windows -> Package Manager Console` and in the terminal that opens, run `Update-Database`<sup>*</sup>.
 This will create the tables of the database and will allow you to properly insert the values provided in the second script to the database.
 
+Also, a .env file is provided separately. Paste that file in the root directory of the project.
+
 <sup>*</sup> A migration folder and file should already exist within the application. If not, in the Package Manager Console terminal, run `Add-Migration <name of your choice>` before you run `Update-Database`.
 
 ## Brief description of the layout
